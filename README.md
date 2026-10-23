@@ -678,6 +678,13 @@ propietario o veterinario informa `RUT`.
 - `interfaz.py`: limpia la consola, muestra encabezados y mensajes, solicita
   entradas y pausa los submenús.
 
+### Módulo de pruebas (`tests/`)
+
+- `test_persistencia_sql.py`: valida la inserción transaccional de 3 registros por cada una de las 9 entidades en la base de datos de pruebas (`ConexionDBT`), comprobando la asignación de IDs primarios y restricciones de integridad.
+- `test_sql_a_dominio.py`: comprueba la lectura e hidratación completa de modelos desde SQLite a instancias de dominio en memoria, validando tipos de objetos y reconstrucción de relaciones navegables.
+- `test_excepciones.py`: evalúa la protección ante fallas de invariantes de dominio, duplicados por clave natural (`UNIQUE`) y restricciones de integridad referencial (`FOREIGN KEY`).
+- `test_seguridad_sqli.py`: audita las consultas con criterios de texto en todos los DAO contra inyecciones SQL mediante parámetros `?` y comodines parametrizados.
+
 ---
 
 ## Guía de uso y ejecución

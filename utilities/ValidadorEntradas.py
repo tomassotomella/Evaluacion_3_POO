@@ -60,6 +60,27 @@ class ValidadorEntradas:
         return valor
 
     @staticmethod
+    def validar_decimal(valor: str | float, nombre: str = "Número", minimo: float = None, maximo: float = None) -> float:
+        try:
+            valor = float(valor)
+        except (ValueError, TypeError):
+            raise exceptions.EntradaInvalidaException(
+                nombre,
+                "debe ser un número decimal"
+            )
+        if minimo is not None and valor < minimo:
+            raise exceptions.EntradaInvalidaException(
+                nombre,
+                f"debe ser mayor o igual a {minimo}"
+            )
+        if maximo is not None and valor > maximo:
+            raise exceptions.EntradaInvalidaException(
+                nombre,
+                f"debe ser menor o igual a {maximo}"
+            )
+        return valor
+
+    @staticmethod
     def validar_id(valor: str | int | None, entidad: str = "Entidad") -> int | None:
         """Valida un ID generado por la base de datos o aún no asignado."""
         if valor is None:
