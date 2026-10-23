@@ -1,0 +1,119 @@
+classDiagram
+    direction TB
+        class Persona {
+            <<abstract>>
+            #idPersona: int
+            #rut: String
+            #nombreCompleto: String
+            #telefono: String
+            #Persona(idPersona: int, rut: String, nombreCompleto: String, telefono: String): void
+            -validarRut$(rut: String): boolean
+            -validarTelefono$(telefono: String): boolean
+            +crearPropietario(idPropietario: int, rut: String, nombreCompleto: String, telefono: String) Propietario
+            +crearVeterinario(id: int, rut: String, nombre: String, tel: String, esp: Especialidad) Veterinario
+            +actualizarContacto(nuevotelefono: String): void
+        }
+
+        class Especie {
+            -idEspecie: int
+            -nombreEspecie: String
+            +Especie(idEspecie: int, nombreEspecie: String)
+            +actualizarNombre(nuevonombre: String): void
+        }
+
+        class Especialidad {
+            -idEspecialidad: int
+            -nombreEspecialidad: String
+            +Especialidad(idEspecialidad: int, nombreEspecialidad: String)
+            +actualizarNombre(nuevoNombre: String): void
+        }
+
+        class Propietario {
+            -mascotas: List~Mascota~
+            +agregarMascota(mascota: Mascota): void
+            +eliminarMascota(idmascota: int): boolean
+            +buscarMascota(idmascota: int): Mascota
+        }
+
+        class Veterinario {
+            -especialidad: Especialidad
+            -historialAtenciones: List~DetalleConsulta~
+            +actualizarEspecialidad(nuevaespecialidad: Especialidad): void
+            +obtenerHistorialAtenciones(): List~DetalleConsulta~
+        }
+
+        class Medicamento {
+            -idMedicamento: int
+            -nombreComercial: String
+            -precio: int
+            -stock: int
+            -stockCritico$: int = 10
+            +Medicamento(idMedicamento: int, nombreComercial: String, precio: int, stock: int)
+            +descontarStock(cantidad: int): boolean
+            +reponerStock(cantidad: int): void
+            +hayStockSuficiente(cantidad: int): boolean
+            +esStockCritico(): boolean
+        }
+
+        class Mascota {
+            -idMascota: int
+            -nombre: String
+            -fechaNacimiento: Date
+            -especie: Especie
+            -propietario: Propietario
+            -consultas: List~Consulta~
+            +Mascota(idMascota: int, nombre: String, fechaNacimiento: Date, especie: Especie, propietario: Propietario)
+            +obtenerFechaActual(): Date
+            +calcularEdadAnios(): int
+            +agregarConsulta(consulta: Consulta): void
+            +obtenerHistorial(): List~Consulta~
+            +cambiarPropietario(nuevoPropietario: Propietario): void
+        }
+
+        class DetalleConsulta {
+            -idDetalle: int
+            -diagnostico: String
+            -tratamiento: String
+            -veterinario: Veterinario
+            -recetas: List~RecetaMedica~
+            +DetalleConsulta(idDetalle: int, diagnostico: String, tratamiento: String, veterinario: Veterinario)
+            +agregarReceta(receta: RecetaMedica): void
+            +actualizarDiagnostico(diagnostico: String): void
+            +actualizarTratamiento(tratamiento: String): void
+            +calcularTotalTratamiento(): int
+        }
+
+        class RecetaMedica {
+            -idRecetaMedica: int
+            -cantidad: int
+            -instrucciones: String
+            -medicamento: Medicamento
+            -detalleConsulta: DetalleConsulta
+            +RecetaMedica(idRecetaMedica: int, cantidad: int, instrucciones: String, medicamento: Medicamento, detalleConsulta: DetalleConsulta)
+            +calcularCosto(): int
+            +procesarPrescripcion(): boolean
+            +validarPrescripcion(): boolean
+        }
+
+        class Consulta {
+            -idConsulta: int
+            -fechaConsulta: Date
+            -motivo: String
+            -estado: String
+            -mascota: Mascota
+            -detalle: DetalleConsulta
+            +Consulta(idConsulta: int, fechaConsulta: Date, motivo: String, estado: String, mascota: Mascota, detalle: DetalleConsulta)
+            +finalizarConsulta(): void
+            +cambiarEstado(nuevoEstado: String): void
+        }
+
+    Persona <|-- Propietario
+    Persona <|-- Veterinario
+    Propietario "1" -- "0..*" Mascota : tiene
+    Especie "1" -- "0..*" Mascota : clasifica a
+    Mascota "1" -- "0..*" Consulta : asiste a
+    Consulta "1" *-- "1" DetalleConsulta : contiene
+    Veterinario "1" -- "0..*" DetalleConsulta : atiende
+    DetalleConsulta "1" *-- "0..*" RecetaMedica : incluye
+    Medicamento "1" --o "0..*" RecetaMedica : es prescrito en
+    Especialidad "1" -- "0..*" Veterinario : posee
