@@ -10,6 +10,10 @@ from services.mascota_service import MascotaService
 from utilities.ValidadorEntradas import ValidadorEntradas
 from exceptions import exceptions
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.economia_service import EconomiaService
 
 class ConsultaService:
     def __init__(
@@ -18,20 +22,43 @@ class ConsultaService:
             receta_dao: RecetaMedicaDAO,
             medicamento_dao: MedicamentoDAO,
             persona_service: PersonaService,
-            mascota_service: MascotaService
+            mascota_service: MascotaService,
+            economia_service: EconomiaService
             ):
         self.consulta_dao = consulta_dao
         self.receta_dao = receta_dao
         self.medicamento_dao = medicamento_dao
         self.persona_service = persona_service
         self.mascota_service = mascota_service
+        self.economia_service = economia_service
+
+    def _enriquecer_consulta(self, consulta: Consulta) -> Consulta:
+        if self.economia_service is not None:
+            try:
+                dolar = self.economia_service.obtener_dolar_actual()
+                consulta.calcular_montos_usd(dolar)
+            except exceptions.ServicioExternoException:
+                pass
+        return consulta
+
+    def _enriquecer_consultas(self, consultas: list[Consulta]) -> list[Consulta]:
+        if consultas and self.economia_service is not None:
+            try:
+                dolar = self.economia_service.obtener_dolar_actual()
+                for consulta in consultas:
+                    consulta.calcular_montos_usd(dolar)
+            except exceptions.ServicioExternoException:
+                pass
+        return consultas
 
     def obtener_consulta_por_id(self, id_consulta: int | str) -> Consulta:
         id_valido = ValidadorEntradas.validar_id(id_consulta, 'Consulta')
-        return self.consulta_dao.obtener_consulta_por_id(id_valido)
+        return self._enriquecer_consulta(
+            self.consulta_dao.obtener_consulta_por_id(id_valido)
+        )
 
     def listar_consultas(self) -> list[Consulta]:
-        return self.consulta_dao.listar_consultas()
+        return self._enriquecer_consultas(self.consulta_dao.listar_consultas())
 
     def listar_consultas_por_mascota(self, id_mascota: int | str) -> list[Consulta]:
         mascota = self.mascota_service.obtener_mascota_por_id(id_mascota)
@@ -39,7 +66,9 @@ class ConsultaService:
             raise exceptions.ReglaNegocioError(
                 'La mascota debe tener un ID asignado.'
             )
-        return self.consulta_dao.listar_consultas_por_mascota(mascota.id_mascota)
+        return self._enriquecer_consultas(
+            self.consulta_dao.listar_consultas_por_mascota(mascota.id_mascota)
+        )
 
     def listar_consultas_por_estado(
         self,
@@ -50,7 +79,9 @@ class ConsultaService:
             EstadosConsulta,
             'Estado de consulta'
         )
-        return self.consulta_dao.listar_consultas_por_estado(estado_valido)
+        return self._enriquecer_consultas(
+            self.consulta_dao.listar_consultas_por_estado(estado_valido)
+        )
 
     def listar_consultas_por_veterinario(
         self,
@@ -61,7 +92,9 @@ class ConsultaService:
             raise exceptions.ReglaNegocioError(
                 "El veterinario debe tener un ID asignado."
             )
-        return self.consulta_dao.listar_consultas_por_veterinario(veterinario.id_persona)
+        return self._enriquecer_consultas(
+            self.consulta_dao.listar_consultas_por_veterinario(veterinario.id_persona)
+        )
 
     def registrar_consulta(
         self,
@@ -75,7 +108,7 @@ class ConsultaService:
             motivo = motivo
         )
         self.consulta_dao.insertar_consulta(consulta)
-        return consulta
+        return self._enriquecer_consulta(consulta)
 
     def iniciar_atencion(self, id_consulta: int | str, rut_veterinario: str) -> Consulta:
         consulta = self.obtener_consulta_por_id(id_consulta)

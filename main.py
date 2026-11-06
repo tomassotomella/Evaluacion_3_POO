@@ -34,8 +34,15 @@ def main() -> None:
     # Services (respetando sus dependencias)
     persona_service = PersonaService(propietario_dao, veterinario_dao, especialidad_dao)
     mascota_service = MascotaService(mascota_dao, especie_dao, persona_service)
-    consulta_service = ConsultaService(consulta_dao, receta_dao, medicamento_dao, persona_service, mascota_service)
     economia_service = EconomiaService(divisa_dao)
+    consulta_service = ConsultaService(
+        consulta_dao,
+        receta_dao,
+        medicamento_dao,
+        persona_service,
+        mascota_service,
+        economia_service
+    )
     farmacia_service = FarmaciaService(medicamento_dao, consulta_service, economia_service)
 
     try:

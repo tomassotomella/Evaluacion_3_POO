@@ -36,6 +36,8 @@ class ValidadorEntradas:
 
     @staticmethod
     def validar_entero(valor: str | int, nombre: str = "Número", minimo: int = None, maximo: int = None) -> int:
+        if isinstance(valor, bool):
+            raise exceptions.EntradaInvalidaException(nombre, "debe ser un número entero")
         try:
             valor = int(valor)
         except (ValueError, TypeError):
@@ -57,6 +59,8 @@ class ValidadorEntradas:
 
     @staticmethod
     def validar_decimal(valor: str | float, nombre: str = "Número", minimo: float = None, maximo: float = None) -> float:
+        if isinstance(valor, bool):
+            raise exceptions.EntradaInvalidaException(nombre, "debe ser un número decimal")
         try:
             valor = float(valor)
         except (ValueError, TypeError):

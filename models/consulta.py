@@ -8,6 +8,7 @@ from exceptions import exceptions
 if TYPE_CHECKING:
     from mascota import Mascota
     from detalle_consulta import DetalleConsulta
+    from divisa import Divisa
 
 class EstadosConsulta(str, Enum):
     AGENDADA = "AGENDADA"
@@ -19,6 +20,8 @@ class EstadosConsulta(str, Enum):
 
 
 class Consulta:
+    TARIFA_BASE_PREDETERMINADA = 25000
+    PORCENTAJE_RECARGO_BASE = 0.0
     def __init__(
         self,
         mascota: Mascota,
@@ -28,6 +31,9 @@ class Consulta:
         detalle: DetalleConsulta | None = None,
         fecha_inicio_atencion: datetime | None = None,
         fecha_fin_atencion: datetime | None = None,
+        es_urgencia: bool = False,
+        tarifa_base: int | None = None,
+        porcentaje_recargo_feriado: float = PORCENTAJE_RECARGO_BASE,
         id_consulta: int | None = None,
     ):
         #validar ID
@@ -40,10 +46,18 @@ class Consulta:
         self._motivo = ''
         self._estado = ''
         self._detalle = None
+        self._tarifa_base = None
+        self._porcentaje_recargo_feriado = 0
+        self._es_urgencia = None
+        self._tarifa_base_usd = None
+        self._monto_total_usd = None
 
         self.fecha_agendada = fecha_agendada
         self.mascota = mascota
         self.detalle = detalle
+        self.tarifa_base = tarifa_base
+        self.es_urgencia = es_urgencia
+        self.porcentaje_recargo_feriado = porcentaje_recargo_feriado
         self.motivo = motivo
         self._estado = estado
 
@@ -85,7 +99,6 @@ class Consulta:
     def estado(self) -> EstadosConsulta:
         return self._estado
 
-
     @property
     def mascota(self) -> Mascota:
         return self._mascota
@@ -105,11 +118,77 @@ class Consulta:
             detalle = ValidadorEntradas.validar_instancia(detalle, DetalleConsulta, 'Detalle de la Consulta', True)
         self._detalle = detalle
 
+    @property
+    def es_urgencia(self) -> bool:
+        return self._es_urgencia
+    @es_urgencia.setter
+    def es_urgencia(self, valor: bool) -> None:
+        self._es_urgencia = ValidadorEntradas.validar_instancia(
+            valor,
+            bool,
+            "Urgencia"
+        )
+
+    @property
+    def tarifa_base(self) -> int:
+        return self._tarifa_base
+    @tarifa_base.setter
+    def tarifa_base(self, tarifa: int | None):
+        if tarifa is None:
+            self._tarifa_base = self.TARIFA_BASE_PREDETERMINADA
+        else:
+            self._tarifa_base = ValidadorEntradas.validar_entero(tarifa, 'Tarifa Base', minimo= 10000)
+
+    @property
+    def porcentaje_recargo_feriado(self) -> float:
+        return self._porcentaje_recargo_feriado
+    @porcentaje_recargo_feriado.setter
+    def porcentaje_recargo_feriado(self, porcentaje: float | str ):
+        if not self.es_urgencia:
+            self._porcentaje_recargo_feriado = self.PORCENTAJE_RECARGO_BASE
+        else:
+            self._porcentaje_recargo_feriado = ValidadorEntradas.validar_decimal(
+            porcentaje,
+            "Porcentaje de recargo",
+            minimo=1,
+            maximo=100
+        )
+
+    @property
+    def monto_total(self) -> int:
+        recargo = self.tarifa_base * (self.porcentaje_recargo_feriado / 100)
+        return int(round(recargo + self.tarifa_base))
+
+    @property
+    def tarifa_base_usd(self) -> float | None:
+        return self._tarifa_base_usd
+
+    @property
+    def monto_total_usd(self) -> float | None:
+        return self._monto_total_usd
+
+    def calcular_montos_usd(self, divisa: Divisa) -> tuple[float, float]:
+        from models.divisa import Divisa
+        divisa_valida = ValidadorEntradas.validar_instancia(
+            divisa,
+            Divisa,
+            "Divisa"
+        )
+        self._tarifa_base_usd = divisa_valida.convertir_desde_pesos(
+            self.tarifa_base
+        )
+        self._monto_total_usd = divisa_valida.convertir_desde_pesos(
+            self.monto_total
+        )
+        return self._tarifa_base_usd, self._monto_total_usd
+    
     def asignar_id(self, id_consulta: int) -> None:
         if self._id_consulta is not None:
             raise exceptions.ReglaNegocioError("La consulta ya tiene un ID asignado y no puede ser reasignado.")
         self._id_consulta = ValidadorEntradas.validar_id(id_consulta, "consulta")
 
+
+    
     def _validar_fecha_agendada(self, fecha_agendada: datetime, es_nueva: bool) -> datetime:
         fecha_valida = ValidadorEntradas.validar_fecha(
         fecha_agendada,

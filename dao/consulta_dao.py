@@ -29,6 +29,10 @@ class ConsultaDAO:
             fecha_agendada TEXT NOT NULL,
             estado TEXT NOT NULL,
             motivo TEXT,
+            es_urgencia INTEGER NOT NULL DEFAULT 0,
+            tarifa_base INTEGER NOT NULL,
+            porcentaje_recargo_feriado REAL NOT NULL,
+            monto_total INTEGER NOT NULL,
             fecha_inicio_atencion TEXT,
             fecha_fin_atencion TEXT,
             id_detalle INTEGER UNIQUE,
@@ -64,10 +68,11 @@ class ConsultaDAO:
 
         sql = """
         INSERT INTO CONSULTA (
-            id_mascota, fecha_agendada, estado, motivo, fecha_inicio_atencion,
-            fecha_fin_atencion, id_detalle
+            id_mascota, fecha_agendada, estado, motivo, es_urgencia,
+            tarifa_base, porcentaje_recargo_feriado, monto_total,
+            fecha_inicio_atencion, fecha_fin_atencion, id_detalle
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """
         try:
             with self.conexion_db.obtener_conexion() as conn:
@@ -77,6 +82,10 @@ class ConsultaDAO:
                     fecha_agendada_str,
                     estado_str,
                     consulta.motivo,
+                    int(consulta.es_urgencia),
+                    consulta.tarifa_base,
+                    consulta.porcentaje_recargo_feriado,
+                    consulta.monto_total,
                     inicio_str,
                     fin_str,
                     None
@@ -95,7 +104,9 @@ class ConsultaDAO:
         """Retorna la consulta o lanza EntidadNoEncontradaException si no existe."""
         sql = """
         SELECT id_consulta, id_mascota, fecha_agendada, estado, motivo,
-               fecha_inicio_atencion, fecha_fin_atencion, id_detalle
+               es_urgencia, tarifa_base, porcentaje_recargo_feriado,
+               monto_total, fecha_inicio_atencion, fecha_fin_atencion,
+               id_detalle
         FROM CONSULTA
         WHERE id_consulta = ?;
         """
@@ -110,7 +121,9 @@ class ConsultaDAO:
     def listar_consultas_por_mascota(self, id_mascota: int) -> list[Consulta]:
         sql = """
         SELECT id_consulta, id_mascota, fecha_agendada,
-            estado, motivo, fecha_inicio_atencion, fecha_fin_atencion, id_detalle
+            estado, motivo, es_urgencia, tarifa_base,
+            porcentaje_recargo_feriado, monto_total,
+            fecha_inicio_atencion, fecha_fin_atencion, id_detalle
         FROM CONSULTA
         WHERE id_mascota = ?
         ORDER BY fecha_agendada DESC;
@@ -131,7 +144,9 @@ class ConsultaDAO:
     ) -> list[Consulta]:
         sql = """
         SELECT id_consulta, id_mascota, fecha_agendada,
-            estado, motivo, fecha_inicio_atencion, fecha_fin_atencion, id_detalle
+            estado, motivo, es_urgencia, tarifa_base,
+            porcentaje_recargo_feriado, monto_total,
+            fecha_inicio_atencion, fecha_fin_atencion, id_detalle
         FROM CONSULTA
         WHERE estado = ?
         ORDER BY fecha_agendada DESC;
@@ -153,7 +168,9 @@ class ConsultaDAO:
         """
         sql = """
         SELECT c.id_consulta, c.id_mascota, c.fecha_agendada, c.estado, c.motivo,
-               c.fecha_inicio_atencion, c.fecha_fin_atencion, c.id_detalle
+               c.es_urgencia, c.tarifa_base, c.porcentaje_recargo_feriado,
+               c.monto_total, c.fecha_inicio_atencion, c.fecha_fin_atencion,
+               c.id_detalle
         FROM CONSULTA c
         JOIN MASCOTA m ON c.id_mascota = m.id_mascota
         WHERE m.nombre LIKE ?
@@ -172,7 +189,9 @@ class ConsultaDAO:
     def listar_consultas(self) -> list[Consulta]:
         sql = """
         SELECT id_consulta, id_mascota, fecha_agendada, estado, motivo,
-               fecha_inicio_atencion, fecha_fin_atencion, id_detalle
+               es_urgencia, tarifa_base, porcentaje_recargo_feriado,
+               monto_total, fecha_inicio_atencion, fecha_fin_atencion,
+               id_detalle
         FROM CONSULTA
         ORDER BY fecha_agendada DESC;
         """
@@ -195,6 +214,10 @@ class ConsultaDAO:
             c.fecha_agendada,
             c.estado,
             c.motivo,
+            c.es_urgencia,
+            c.tarifa_base,
+            c.porcentaje_recargo_feriado,
+            c.monto_total,
             c.fecha_inicio_atencion,
             c.fecha_fin_atencion,
             c.id_detalle
@@ -229,7 +252,9 @@ class ConsultaDAO:
         sql = """
         UPDATE CONSULTA
         SET id_mascota = ?, fecha_agendada = ?, estado = ?,
-            motivo = ?, fecha_inicio_atencion = ?, fecha_fin_atencion = ?,
+            motivo = ?, es_urgencia = ?, tarifa_base = ?,
+            porcentaje_recargo_feriado = ?, monto_total = ?,
+            fecha_inicio_atencion = ?, fecha_fin_atencion = ?,
             id_detalle = ?
         WHERE id_consulta = ?;
         """
@@ -240,6 +265,10 @@ class ConsultaDAO:
                 fecha_agendada_str,
                 estado_str,
                 consulta.motivo,
+                int(consulta.es_urgencia),
+                consulta.tarifa_base,
+                consulta.porcentaje_recargo_feriado,
+                consulta.monto_total,
                 inicio_str,
                 fin_str,
                 consulta.detalle.id_detalle if consulta.detalle is not None else None,
@@ -426,8 +455,8 @@ class ConsultaDAO:
 
         # Parseo fechas
         fecha_agendada = sqlite_a_datetime(fila[2])
-        inicio = sqlite_a_datetime(fila[5], permitir_nulo=True)
-        fin = sqlite_a_datetime(fila[6], permitir_nulo=True)
+        inicio = sqlite_a_datetime(fila[9], permitir_nulo=True)
+        fin = sqlite_a_datetime(fila[10], permitir_nulo=True)
 
         consulta = Consulta(
             id_consulta=fila[0],
@@ -437,16 +466,21 @@ class ConsultaDAO:
             motivo=fila[4],
             detalle=None,
             fecha_inicio_atencion=inicio,
-            fecha_fin_atencion=fin
+            fecha_fin_atencion=fin,
+            es_urgencia=bool(fila[5]),
+            tarifa_base=fila[6],
+            porcentaje_recargo_feriado=fila[7]
         )
-        if cargar_detalle and fila[7] is not None:
-            consulta.detalle = self._obtener_detalle(fila[7], consulta)
+        if cargar_detalle and fila[11] is not None:
+            consulta.detalle = self._obtener_detalle(fila[11], consulta)
         return consulta
 
     def _obtener_consulta_por_id(self, id_consulta: int) -> Consulta:
         sql = """
         SELECT id_consulta, id_mascota, fecha_agendada, estado, motivo,
-               fecha_inicio_atencion, fecha_fin_atencion, id_detalle
+               es_urgencia, tarifa_base, porcentaje_recargo_feriado,
+               monto_total, fecha_inicio_atencion, fecha_fin_atencion,
+               id_detalle
         FROM CONSULTA
         WHERE id_consulta = ?;
         """

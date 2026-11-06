@@ -22,7 +22,6 @@ class FarmaciaService:
         self.consulta_service = consulta_service
         self.economia_service = economia_service
 
-    # --- HELPERS DE ENRIQUECIMIENTO (Cálculo de precio USD en memoria RAM) ---
     def _enriquecer_medicamento(self, medicamento: Medicamento | None) -> Medicamento | None:
         if medicamento is not None:
             try:
