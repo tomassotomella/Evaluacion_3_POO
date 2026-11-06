@@ -5,7 +5,7 @@ veterinaria. La aplicación permite administrar propietarios, veterinarios,
 especialidades, especies, mascotas, consultas, detalles de atención,
 medicamentos y recetas médicas.
 
-La solución está construida en **Python 3.10 o superior**, utiliza **SQLite3**
+La solución está construida en **Python 3.11 o superior**, utiliza **SQLite3**
 como motor de persistencia y sigue una arquitectura en capas:
 
 - Presentación mediante menús de consola.
@@ -1140,3 +1140,10 @@ Durante el ciclo de vida del desarrollo de la solución, se incorporaron herrami
 5. **Diseño y cobertura de la suite de pruebas**:
    - Estructuración metodológica de los scripts ejecutables en `tests/`: pruebas de persistencia multientidad (`test_persistencia_sql.py`), verificación de hidratación y reconstrucción de grafos de objetos (`test_sql_a_dominio.py`), suite de resiliencia e invariantes (`test_excepciones.py`) y auditorías de seguridad contra inyección SQL parametrizada (`test_seguridad_sqli.py`).
    - Definición de casos de prueba de borde para validar restricciones `UNIQUE`, integridad referencial con claves foráneas activas y verificación de payloads maliciosos según lineamientos OWASP.
+
+6. **Optimización y resiliencia en el consumo de APIs externas mediante caché multinivel**:
+   - Diseño e implementación del patrón *Read-Through / Multilevel Cache* (L1 en memoria RAM y L2 persistente en SQLite) en `EconomiaService` para la consulta y conversión de divisas.
+   - Definición de una política de invalidación basada en fechas hábiles del mercado financiero (`date.today()` y retroceso a viernes durante fines de semana) para suprimir peticiones HTTP redundantes, eliminando la latencia en las vistas de catálogo y previniendo bloqueos por *rate limiting* de la API externa.
+   - Enriquecimiento volátil en memoria RAM para medicamentos y recetas médicas en `FarmaciaService`, permitiendo valorizaciones bimonetarias (`CLP` y `USD`) en tiempo real durante la consulta de catálogo y el flujo transaccional de ventas sin alterar el esquema relacional en SQLite.
+   - Implementación de un mecanismo de contingencia degradada (*fallback offline*), garantizando la continuidad operativa del sistema mediante el uso de la última cotización histórica almacenada en SQLite ante caídas de red, fallos de conectividad o indisponibilidad del servicio remoto.
+

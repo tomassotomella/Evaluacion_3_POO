@@ -2,10 +2,34 @@ from utilities import interfaz as ui
 from screens import propietario_screens, veterinario_screens, mascotas_screen, consulta_screens, farmacia_screen
 
 
-def main_menu(persona_service, mascota_service, consulta_service, farmacia_service) -> None:
+def _obtener_texto_mercado(economia_service) -> str:
+    """Obtiene el texto del mercado cambiario para el encabezado de forma segura."""
+    if not economia_service:
+        return "[MERCADO CAMBIARIO]: Servicio no configurado"
+    try:
+        divisa = economia_service.obtener_dolar_actual()
+        valor_formateado = ui.formatear_decimal(divisa.valor)
+        return f"[MERCADO CAMBIARIO]: Dólar Observado: ${valor_formateado} CLP (Fuente: {economia_service.SERVICIO_NOMBRE})"
+    except Exception:
+        return "[MERCADO CAMBIARIO]: Dólar Observado: No disponible (Offline)"
+
+
+def main_menu(
+    persona_service,
+    mascota_service,
+    consulta_service,
+    farmacia_service,
+    economia_service=None
+) -> None:
     """Menú principal de la aplicación VetCare."""
     while True:
-        ui.limpiar_y_encabezado("VETCARE - CLÍNICA VETERINARIA")
+        ui.limpiar_pantalla()
+        ancho = 80
+        print("=" * ancho)
+        print("VETCARE - CLÍNICA VETERINARIA".center(ancho))
+        print("=" * ancho)
+        print(_obtener_texto_mercado(economia_service))
+        print("=" * ancho)
         print('''
         1. Gestión de Propietarios
         2. Gestión de Veterinarios

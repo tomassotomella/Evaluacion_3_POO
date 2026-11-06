@@ -74,6 +74,7 @@ class MascotaService:
 
     def listar_mascotas(self) -> list[Mascota]:
         return self.mascota_dao.listar_todos()
+    
     def listar_mascotas_por_propietario (self, rut_propietario: str) -> list[Mascota]:
         propietario = self.persona_service.obtener_propietario_por_rut(rut_propietario)
         if propietario.id_persona is None:

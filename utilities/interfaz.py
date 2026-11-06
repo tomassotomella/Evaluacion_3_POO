@@ -22,8 +22,27 @@ def limpiar_y_encabezado(titulo: str) -> None:
     print("=" * ancho)
     print()
 
-def formatear_moneda(monto: int) -> str:
-    return f"${monto:,.0f}".replace(",", ".")
+def formatear_moneda(monto: int | float) -> str:
+    """Formatea un monto entero en CLP con separador de miles con punto (ej: $14.200)."""
+    return f"${int(monto):,}".replace(",", ".")
+
+def formatear_clp(monto: int | float, incluir_sufijo: bool = True) -> str:
+    """Formatea en moneda chilena: miles con punto ($14.200 o $14.200 CLP)."""
+    base = f"${int(monto):,}".replace(",", ".")
+    return f"{base} CLP" if incluir_sufijo else base
+
+def formatear_decimal(valor: float, decimales: int = 2) -> str:
+    """Formatea un número decimal según la norma chilena (miles con punto, decimales con coma).
+    Ej: 946.8 -> '946,80' | 1250.5 -> '1.250,50'
+    """
+    parte_entera, parte_decimal = f"{valor:,.{decimales}f}".split(".")
+    parte_entera_punto = parte_entera.replace(",", ".")
+    return f"{parte_entera_punto},{parte_decimal}"
+
+def formatear_usd(monto: float, incluir_sufijo: bool = True) -> str:
+    """Formatea en dólares bajo norma chilena (miles con punto, decimales con coma): $15,00 USD."""
+    base = f"${formatear_decimal(monto, decimales=2)}"
+    return f"{base} USD" if incluir_sufijo else base
 
 def mostrar_exito(mensaje: str) -> None:
     print(f"\n [ÉXITO] {mensaje}")

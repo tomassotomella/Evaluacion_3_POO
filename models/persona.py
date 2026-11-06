@@ -1,16 +1,4 @@
-'''        class Persona {
-            <<abstract>>
-            #idPersona: int
-            #rut: String
-            #nombreCompleto: String
-            #telefono: String
-            #Persona(idPersona: int, rut: String, nombreCompleto: String, telefono: String): void
-            -validarRut$(rut: String): boolean
-            -validarTelefono$(telefono: String): boolean
-            +crearPropietario(idPropietario: int, rut: String, nombreCompleto: String, telefono: String) Propietario
-            +crearVeterinario(id: int, rut: String, nombre: String, tel: String, esp: Especialidad) Veterinario
-            +actualizarContacto(nuevotelefono: String): void
-        }'''
+
 import re
 from utilities.ValidadorEntradas import ValidadorEntradas
 from exceptions import exceptions

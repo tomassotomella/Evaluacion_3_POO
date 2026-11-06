@@ -1,18 +1,3 @@
-'''        class Mascota {
-            -idMascota: int
-            -nombre: String
-            -fechaNacimiento: Date
-            -especie: Especie
-            -propietario: Propietario
-            -consultas: List~Consulta~
-            +Mascota(idMascota: int, nombre: String, fechaNacimiento: Date, especie: Especie, propietario: Propietario)
-            +obtenerFechaActual(): Date
-            +calcularEdadAnios(): int
-            +agregarConsulta(consulta: Consulta): void
-            +obtenerHistorial(): List~Consulta~
-            +cambiarPropietario(nuevoPropietario: Propietario): void
-        }'''
-
 from __future__ import annotations
 from datetime import datetime, timedelta, date
 from typing import TYPE_CHECKING

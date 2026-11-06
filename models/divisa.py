@@ -24,3 +24,8 @@ class Divisa:
         if monto_divisa < 0:
             raise exceptions.ReglaNegocioError('No es posible convertir montos negativos')
         return round(monto_divisa * self.valor)
+
+    def convertir_desde_pesos(self, monto_pesos: float) -> float:
+        if monto_pesos < 0:
+            raise exceptions.ReglaNegocioError('No es posible convertir montos negativos')
+        return round(monto_pesos / self.valor, 2)

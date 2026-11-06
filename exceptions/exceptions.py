@@ -85,3 +85,40 @@ class ReferenciaIntegridadError(PersistenciaError):
     """Lanzada cuando una mutación viola restricciones de claves foráneas en la BD."""
     def __init__(self, mensaje: str):
         super().__init__(f"Violación de integridad referencial: {mensaje}")
+
+
+class ServicioExternoException(VetCareException):
+    """Excepción base para fallos al comunicarse con APIs o servicios externos."""
+    def __init__(self, servicio: str, mensaje: str):
+        self.servicio = servicio
+        self.mensaje = mensaje
+        super().__init__(f"[{servicio}] Error en servicio externo: {mensaje}")
+
+
+class ConexionTimeoutException(ServicioExternoException):
+    """Lanzada cuando la conexión con el servicio externo excede el tiempo límite."""
+    def __init__(self, servicio: str, timeout_segundos: int):
+        self.timeout_segundos = timeout_segundos
+        super().__init__(
+            servicio,
+            f"Tiempo de espera agotado tras {timeout_segundos} segundos."
+        )
+
+
+class ErrorRespuestaHttpException(ServicioExternoException):
+    """Lanzada cuando el servidor externo responde con un código de error HTTP (4xx o 5xx)."""
+    def __init__(self, servicio: str, status_code: int, detalle: str = ""):
+        self.status_code = status_code
+        self.detalle = detalle
+        super().__init__(
+            servicio,
+            f"El servidor respondió con código HTTP {status_code}. Detalle: {detalle}"
+        )
+
+
+class FormatoRespuestaInvalidoException(ServicioExternoException):
+    """Lanzada cuando la estructura o los datos de la respuesta externa son inválidos o incompletos."""
+    def __init__(self, servicio: str, motivo: str):
+        self.motivo = motivo
+        super().__init__(servicio, f"Respuesta malformada o incompleta: {motivo}")
+

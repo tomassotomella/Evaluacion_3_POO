@@ -10,7 +10,11 @@ from exceptions.exceptions import (
     RelacionInvalidaException,
     ReglaNegocioError,
     PersistenciaError,
-    ReferenciaIntegridadError
+    ReferenciaIntegridadError,
+    ServicioExternoException,
+    ConexionTimeoutException,
+    ErrorRespuestaHttpException,
+    FormatoRespuestaInvalidoException
 )
 import exceptions.exceptions as exceptions
 
@@ -27,6 +31,10 @@ __all__ = [
     'ReglaNegocioError',
     'PersistenciaError',
     'ReferenciaIntegridadError',
+    'ServicioExternoException',
+    'ConexionTimeoutException',
+    'ErrorRespuestaHttpException',
+    'FormatoRespuestaInvalidoException',
     'exceptions'
 ]
 

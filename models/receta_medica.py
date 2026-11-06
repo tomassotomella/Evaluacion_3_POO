@@ -76,4 +76,10 @@ class RecetaMedica:
     def calcular_subtotal(self) -> int:
         return self.cantidad * self.medicamento.precio
 
+    def calcular_subtotal_usd(self) -> float | None:
+        """Calcula el subtotal en USD utilizando el precio_usd calculado del medicamento."""
+        if self.medicamento and self.medicamento.precio_usd is not None:
+            return round(self.cantidad * self.medicamento.precio_usd, 2)
+        return None
+
         

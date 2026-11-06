@@ -1,17 +1,13 @@
-#Crear clase medicamento: 
-'''        class Medicamento {
-            -idMedicamento: int
-            -nombreComercial: String
-            -precio: int
-            -stock: int
-            -stockCritico$: int = 10
-            +Medicamento(idMedicamento: int | None, nombreComercial: String, precio: int, stock: int)
-            +descontarStock(cantidad: int): boolean
-            +reponerStock(cantidad: int): void
-            +hayStockSuficiente(cantidad: int): boolean
-            +esStockCritico(): boolean'''
+
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from utilities.ValidadorEntradas import ValidadorEntradas
 from exceptions import exceptions
+
+if TYPE_CHECKING:
+    from models.divisa import Divisa
+
+
 class Medicamento:
     stock_critico = 10
     def __init__(
@@ -29,6 +25,8 @@ class Medicamento:
         self._nombre_comercial = ''
         self._precio = 0
         self._stock = 0
+        self._precio_usd: float | None = None
+
         #Asignación de Setters
         self.nombre_comercial = nombre_comercial
         self.precio = precio
@@ -86,6 +84,16 @@ class Medicamento:
             maximo = 1000 #Definir politica de stock
         )
         self._stock = stock_valido
+
+    @property
+    def precio_usd(self) -> float | None:
+        """Retorna el arancel equivalente en USD calculado en memoria RAM."""
+        return self._precio_usd
+
+    def calcular_precio_usd(self, divisa: Divisa) -> float:
+        """Calcula y asigna el precio en USD usando la divisa entregada."""
+        self._precio_usd = divisa.convertir_desde_pesos(self.precio)
+        return self._precio_usd
 
     #metodos
     def hay_stock_suficiente(self, cantidad: int) -> bool:

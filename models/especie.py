@@ -1,9 +1,3 @@
-'''class Especie {
-            -idEspecie: int
-            -nombreEspecie: String
-            +Especie(idEspecie: int | None, nombreEspecie: String)
-            +actualizarNombre(nuevonombre: String): void
-        }'''
 from utilities.ValidadorEntradas import ValidadorEntradas
 from exceptions import exceptions
 class Especie:

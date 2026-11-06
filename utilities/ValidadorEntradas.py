@@ -1,8 +1,4 @@
-'''class ValidadorEntradas {
-                    +sanitizarTexto(texto: String): String
-                    +validarNoVacio(texto: String): String
-                    +validarLongitud(texto: String, max: int): boolean
-                }'''
+
 from exceptions import exceptions
 from datetime import datetime, date
 import re
