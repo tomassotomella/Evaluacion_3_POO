@@ -2,6 +2,7 @@ import requests
 from datetime import date, datetime, timedelta
 from dao.divisa_dao import DivisaDAO
 from exceptions import exceptions
+from utilities.ValidadorEntradas import ValidadorEntradas
 from exceptions.exceptions import (
     ServicioExternoException,
     ConexionTimeoutException,
@@ -24,10 +25,11 @@ class EconomiaService:
         # Caché
         self._cache: dict[str, Divisa] = {}
 
+
     @classmethod
     def obtener_indicador(cls, tipo_indicador: str) -> Divisa:
-
-        endpoint = f"{cls.URL_BASE}/{tipo_indicador.strip().lower()}"
+        indicador_seguro = ValidadorEntradas.sanitizar_codigo_indicador(tipo_indicador=)
+        endpoint = f"{cls.URL_BASE}/{indicador_seguro}"
 
         try:
             respuesta = requests.get(endpoint, headers=cls.HEADERS, timeout=cls.TIMEOUT)

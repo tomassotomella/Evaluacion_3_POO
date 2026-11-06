@@ -155,3 +155,13 @@ class ValidadorEntradas:
         if not re.fullmatch(patron, fono_limpio):
             raise exceptions.EntradaInvalidaException('teléfono', 'no cumple con el formato (+56) 9 XXXX XXXX')
         return f'+56{fono_limpio}'
+
+    @staticmethod
+    def sanitizar_codigo_indicador(cls, tipo_indicador: str) -> str:
+        texto_limpio = ValidadorEntradas.validar_no_vacio(tipo_indicador, "Tipo de Indicador").strip().lower()
+        if not re.fullmatch(r"^[a-z0-9_-]+$", texto_limpio):
+            raise exceptions.EntradaInvalidaException(
+                "Tipo de Indicador", 
+                "contiene caracteres no permitidos o formato inválido."
+            )
+        return texto_limpio
