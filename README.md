@@ -79,6 +79,16 @@ persistencia para mantener responsabilidades claras y facilitar las pruebas.
   el manejo de excepciones y la resistencia de las búsquedas ante SQL
   Injection.
 
+### Modo de guardia
+
+Los domingos y feriados la agenda normal permanece disponible para programar
+controles futuros, pero la atención presencial se concentra en el modo de
+guardia. `FeriadoService` encapsula la caché y la consulta del calendario;
+`ConsultaService` aplica las reglas especiales de urgencia y mantiene el ciclo
+de vida y la persistencia de todas las consultas. La pantalla de guardia
+reorganiza ese flujo para registrar urgencias y reanudar pacientes que esperan
+exámenes.
+
 ---
 
 ## Seguridad y prevención de SQL Injection
@@ -1146,4 +1156,3 @@ Durante el ciclo de vida del desarrollo de la solución, se incorporaron herrami
    - Definición de una política de invalidación basada en fechas hábiles del mercado financiero (`date.today()` y retroceso a viernes durante fines de semana) para suprimir peticiones HTTP redundantes, eliminando la latencia en las vistas de catálogo y previniendo bloqueos por *rate limiting* de la API externa.
    - Enriquecimiento volátil en memoria RAM para medicamentos y recetas médicas en `FarmaciaService`, permitiendo valorizaciones bimonetarias (`CLP` y `USD`) en tiempo real durante la consulta de catálogo y el flujo transaccional de ventas sin alterar el esquema relacional en SQLite.
    - Implementación de un mecanismo de contingencia degradada (*fallback offline*), garantizando la continuidad operativa del sistema mediante el uso de la última cotización histórica almacenada en SQLite ante caídas de red, fallos de conectividad o indisponibilidad del servicio remoto.
-

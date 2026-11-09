@@ -112,6 +112,11 @@ class ValidadorEntradas:
             nombre,
             "formato inválido. Use YYYY-MM-DD o YYYY-MM-DD HH:MM"
         )
+
+    @staticmethod
+    def validar_fecha_calendario(valor, nombre: str = "Fecha") -> date:
+        fecha_valida = ValidadorEntradas.validar_fecha(valor, nombre)
+        return fecha_valida.date()
     @staticmethod
     def validar_instancia(valor, tipo, nombre: str = "Entidad", permitir_nulo: bool = False):
         if valor is None:
@@ -156,7 +161,7 @@ class ValidadorEntradas:
             raise exceptions.EntradaInvalidaException('teléfono', 'no cumple con el formato (+56) 9 XXXX XXXX')
         return f'+56{fono_limpio}'
 
-    @staticmethod
+    @classmethod
     def sanitizar_codigo_indicador(cls, tipo_indicador: str) -> str:
         texto_limpio = ValidadorEntradas.validar_no_vacio(tipo_indicador, "Tipo de Indicador").strip().lower()
         if not re.fullmatch(r"^[a-z0-9_-]+$", texto_limpio):

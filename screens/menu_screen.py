@@ -1,5 +1,15 @@
+from datetime import date
+
 from utilities import interfaz as ui
-from screens import propietario_screens, veterinario_screens, mascotas_screen, consulta_screens, farmacia_screen
+from exceptions import exceptions
+from screens import (
+    propietario_screens,
+    veterinario_screens,
+    mascotas_screen,
+    consulta_screens,
+    farmacia_screen,
+    urgencia_screen,
+)
 
 
 def _obtener_texto_mercado(economia_service) -> str:
@@ -19,7 +29,8 @@ def main_menu(
     mascota_service,
     consulta_service,
     farmacia_service,
-    economia_service=None
+    economia_service=None,
+    feriado_service=None,
 ) -> None:
     """Menú principal de la aplicación VetCare."""
     while True:
@@ -29,6 +40,15 @@ def main_menu(
         print("VETCARE - CLÍNICA VETERINARIA".center(ancho))
         print("=" * ancho)
         print(_obtener_texto_mercado(economia_service))
+        if feriado_service:
+            try:
+                print(f"[FECHA]: {date.today():%d/%m/%Y}")
+                print(
+                    "[CALENDARIO]: "
+                    f"{feriado_service.obtener_resumen_calendario()}"
+                )
+            except exceptions.ServicioExternoException:
+                print("[CALENDARIO]: No disponible (Offline)")
         print("=" * ancho)
         print('''
         1. Gestión de Propietarios
@@ -47,7 +67,9 @@ def main_menu(
             case 3:
                 mascotas_screen.main_mascotas(mascota_service)
             case 4:
-                consulta_screens.main_consultas(consulta_service, farmacia_service)
+                consulta_screens.main_consultas(
+                    consulta_service, farmacia_service
+                )
             case 5:
                 farmacia_screen.main_farmacia(farmacia_service)
             case 0:

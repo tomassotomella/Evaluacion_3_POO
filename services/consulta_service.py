@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from services.economia_service import EconomiaService
+    from services.feriado_service import FeriadoService
 
 class ConsultaService:
     def __init__(
@@ -23,7 +24,8 @@ class ConsultaService:
             medicamento_dao: MedicamentoDAO,
             persona_service: PersonaService,
             mascota_service: MascotaService,
-            economia_service: EconomiaService
+            economia_service: EconomiaService,
+            feriado_service: FeriadoService
             ):
         self.consulta_dao = consulta_dao
         self.receta_dao = receta_dao
@@ -31,15 +33,10 @@ class ConsultaService:
         self.persona_service = persona_service
         self.mascota_service = mascota_service
         self.economia_service = economia_service
+        self.feriado_service = feriado_service
 
     def _enriquecer_consulta(self, consulta: Consulta) -> Consulta:
-        if self.economia_service is not None:
-            try:
-                dolar = self.economia_service.obtener_dolar_actual()
-                consulta.calcular_montos_usd(dolar)
-            except exceptions.ServicioExternoException:
-                pass
-        return consulta
+        return self._enriquecer_consultas([consulta])[0]
 
     def _enriquecer_consultas(self, consultas: list[Consulta]) -> list[Consulta]:
         if consultas and self.economia_service is not None:
@@ -50,6 +47,25 @@ class ConsultaService:
             except exceptions.ServicioExternoException:
                 pass
         return consultas
+
+    def _validar_fecha_consulta_normal(
+        self,
+        fecha: datetime,
+        contexto: str
+    ) -> None:
+        try:
+            es_habil = self.feriado_service.es_dia_habil(fecha.date())
+        except exceptions.ServicioExternoException as error:
+            raise exceptions.ReglaNegocioError(
+                f"No se pudo verificar el calendario oficial de feriados{contexto}: "
+                f"{error}. Por seguridad, la operación ha sido bloqueada."
+            ) from error
+
+        if not es_habil:
+            raise exceptions.ReglaNegocioError(
+                "Las consultas normales solo pueden operar en días hábiles "
+                "(lunes a sábado no feriados)."
+            )
 
     def obtener_consulta_por_id(self, id_consulta: int | str) -> Consulta:
         id_valido = ValidadorEntradas.validar_id(id_consulta, 'Consulta')
@@ -102,16 +118,78 @@ class ConsultaService:
         fecha_agendada: datetime,
         motivo: str | None = None
     ) -> Consulta:
+        fecha_valida = ValidadorEntradas.validar_fecha(fecha_agendada)
+
+        self._validar_fecha_consulta_normal(
+            fecha_valida,
+            ""
+        )
+
         consulta = Consulta(
-            mascota = self.mascota_service.obtener_mascota_por_id(id_mascota),
-            fecha_agendada = ValidadorEntradas.validar_fecha(fecha_agendada),
-            motivo = motivo
+            mascota=self.mascota_service.obtener_mascota_por_id(id_mascota),
+            fecha_agendada=fecha_valida,
+            motivo=motivo
         )
         self.consulta_dao.insertar_consulta(consulta)
         return self._enriquecer_consulta(consulta)
 
+    def registrar_atencion(self, consulta: Consulta, rut_veterinario: str) -> Consulta:
+        """Registra una consulta ya construida junto con su detalle clínico."""
+        veterinario = self.persona_service.obtener_veterinario_por_rut(rut_veterinario)
+        detalle = DetalleConsulta(consulta=consulta, veterinario=veterinario)
+        consulta.registrar_detalle(detalle)
+        self.consulta_dao.insertar_consulta(consulta)
+        self.consulta_dao.insertar_detalle(detalle)
+        self.consulta_dao.actualizar_consulta(consulta)
+        return self._enriquecer_consulta(consulta)
+
+    def registrar_urgencia(
+        self,
+        id_mascota: int | None,
+        rut_veterinario: str,
+        motivo: str | None = None,
+        porcentaje_recargo: float | None = None,
+        tarifa_base: int | None = None,
+    ) -> Consulta:
+        ahora = datetime.now()
+        try:
+            self.feriado_service.validar_urgencia_permitida(ahora.date())
+        except exceptions.ServicioExternoException as error:
+            raise exceptions.ReglaNegocioError(
+                f"No se pudo consultar el servicio de feriados: {error}. "
+                "La urgencia solo puede autorizarse fuera de domingo si se "
+                "confirma que hoy es feriado."
+            ) from error
+
+        consulta = Consulta(
+            mascota=self.mascota_service.obtener_mascota_por_id(id_mascota),
+            fecha_agendada=ahora,
+            fecha_inicio_atencion=ahora,
+            estado=EstadosConsulta.EN_ATENCION,
+            motivo=motivo,
+            es_urgencia=True,
+            tarifa_base=(
+                Consulta.TARIFA_BASE_PREDETERMINADA
+                if tarifa_base is None
+                else tarifa_base
+            ),
+            porcentaje_recargo_feriado=(
+                Consulta.PORCENTAJE_RECARGO_URGENCIA_DEFAULT
+                if porcentaje_recargo is None
+                else porcentaje_recargo
+            ),
+        )
+        return self.registrar_atencion(consulta, rut_veterinario)
+
     def iniciar_atencion(self, id_consulta: int | str, rut_veterinario: str) -> Consulta:
         consulta = self.obtener_consulta_por_id(id_consulta)
+
+        if not consulta.es_urgencia:
+            self._validar_fecha_consulta_normal(
+                datetime.now(),
+                " para iniciar la atención"
+            )
+
         consulta.iniciar_atencion()
         detalle = DetalleConsulta(
             consulta=consulta,
@@ -147,7 +225,13 @@ class ConsultaService:
 
     def reagendar_consulta(self, id_consulta: int | str, nueva_fecha: datetime) -> Consulta:
         consulta = self.obtener_consulta_por_id(id_consulta)
-        consulta.reagendar_consulta(nueva_fecha)
+        nueva_fecha_valida = ValidadorEntradas.validar_fecha(nueva_fecha)
+        if not consulta.es_urgencia:
+            self._validar_fecha_consulta_normal(
+                nueva_fecha_valida,
+                " para reagendar"
+            )
+        consulta.reagendar_consulta(nueva_fecha_valida)
         self.consulta_dao.actualizar_consulta(consulta)
         return consulta
 

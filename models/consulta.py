@@ -22,6 +22,8 @@ class EstadosConsulta(str, Enum):
 class Consulta:
     TARIFA_BASE_PREDETERMINADA = 25000
     PORCENTAJE_RECARGO_BASE = 0.0
+    PORCENTAJE_RECARGO_URGENCIA_DEFAULT = 30.0
+
     def __init__(
         self,
         mascota: Mascota,
@@ -47,19 +49,28 @@ class Consulta:
         self._estado = ''
         self._detalle = None
         self._tarifa_base = None
-        self._porcentaje_recargo_feriado = 0
+        self._porcentaje_recargo_feriado = 0.0
         self._es_urgencia = None
         self._tarifa_base_usd = None
         self._monto_total_usd = None
 
+        self.es_urgencia = es_urgencia
         self.fecha_agendada = fecha_agendada
         self.mascota = mascota
         self.detalle = detalle
         self.tarifa_base = tarifa_base
-        self.es_urgencia = es_urgencia
         self.porcentaje_recargo_feriado = porcentaje_recargo_feriado
         self.motivo = motivo
-        self._estado = estado
+
+        if self.es_urgencia:
+            if estado == EstadosConsulta.AGENDADA:
+                self._estado = EstadosConsulta.EN_ATENCION
+            else:
+                self._estado = estado
+            if self._fecha_inicio_atencion is None:
+                self._fecha_inicio_atencion = self.fecha_agendada
+        else:
+            self._estado = estado
 
     @property
     def id_consulta(self) -> int | None:
@@ -143,16 +154,19 @@ class Consulta:
     def porcentaje_recargo_feriado(self) -> float:
         return self._porcentaje_recargo_feriado
     @porcentaje_recargo_feriado.setter
-    def porcentaje_recargo_feriado(self, porcentaje: float | str ):
+    def porcentaje_recargo_feriado(self, porcentaje: float | str | None):
         if not self.es_urgencia:
             self._porcentaje_recargo_feriado = self.PORCENTAJE_RECARGO_BASE
         else:
-            self._porcentaje_recargo_feriado = ValidadorEntradas.validar_decimal(
-            porcentaje,
-            "Porcentaje de recargo",
-            minimo=1,
-            maximo=100
-        )
+            if porcentaje is None or porcentaje == 0 or porcentaje == 0.0:
+                self._porcentaje_recargo_feriado = self.PORCENTAJE_RECARGO_URGENCIA_DEFAULT
+            else:
+                self._porcentaje_recargo_feriado = ValidadorEntradas.validar_decimal(
+                    porcentaje,
+                    "Porcentaje de recargo",
+                    minimo=1,
+                    maximo=100
+                )
 
     @property
     def monto_total(self) -> int:
@@ -191,10 +205,10 @@ class Consulta:
     
     def _validar_fecha_agendada(self, fecha_agendada: datetime, es_nueva: bool) -> datetime:
         fecha_valida = ValidadorEntradas.validar_fecha(
-        fecha_agendada,
+            fecha_agendada,
             'Fecha y hora agendada para la consulta'
         )
-        if es_nueva and fecha_valida <= datetime.now():
+        if es_nueva and not self._es_urgencia and fecha_valida <= datetime.now():
             raise exceptions.ReglaNegocioError(
                 'La fecha agendada de una consulta nueva debe ser posterior '
                 'al momento de su creación.'

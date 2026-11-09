@@ -28,7 +28,7 @@ class EconomiaService:
 
     @classmethod
     def obtener_indicador(cls, tipo_indicador: str) -> Divisa:
-        indicador_seguro = ValidadorEntradas.sanitizar_codigo_indicador(tipo_indicador=)
+        indicador_seguro = ValidadorEntradas.sanitizar_codigo_indicador(tipo_indicador)
         endpoint = f"{cls.URL_BASE}/{indicador_seguro}"
 
         try:

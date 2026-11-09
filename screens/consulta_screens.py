@@ -11,16 +11,20 @@ def main_consultas(consulta_service, farmacia_service) -> None:
         1. Módulo Recepción y Agenda (Citas)
         2. Módulo de Atención Clínica (Box)
         3. Historial Médico (Buscador Clínico)
+        4. Modo Guardia (Urgencias y pacientes en espera)
         0. Volver al Menú Principal
         ''')
-        opcion = ui.leer_opcion_menu(3)
+        opcion = ui.leer_opcion_menu(4)
         match opcion:
             case 1:
-                submenu_recepcion_agenda(consulta_service)
+                submenu_recepcion_agenda(consulta_service, farmacia_service)
             case 2:
                 submenu_atencion(consulta_service, farmacia_service)
             case 3:
                 submenu_historial_medico(consulta_service)
+            case 4:
+                from screens import urgencia_screen
+                urgencia_screen.main_guardia(consulta_service, farmacia_service)
             case 0:
                 break
 
@@ -29,11 +33,11 @@ def main_consultas(consulta_service, farmacia_service) -> None:
 # MÓDULO 1: RECEPCIÓN Y AGENDA
 # =============================================================================
 
-def submenu_recepcion_agenda(consulta_service) -> None:
+def submenu_recepcion_agenda(consulta_service, farmacia_service=None) -> None:
     while True:
         ui.limpiar_y_encabezado("RECEPCIÓN Y AGENDA DE CITAS")
         print('''
-        1. Agendar Nueva Cita
+        1. Agendar Nueva Cita (Días Hábiles)
         2. Reagendar Cita
         3. Cancelar Cita
         4. Ver Agenda / Consultas
@@ -172,6 +176,18 @@ def reanudar_atencion(consulta_service, farmacia_service) -> None:
     except (exceptions.EntidadNoEncontradaException, exceptions.ReglaNegocioError) as error:
         ui.mostrar_error(str(error))
         ui.pausar()
+
+
+def listar_consultas_en_espera(consulta_service) -> None:
+    """Muestra las consultas pausadas por espera de exámenes."""
+    consultas = consulta_service.listar_consultas_por_estado(
+        EstadosConsulta.EN_ESPERA_EXAMENES
+    )
+    if not consultas:
+        ui.mostrar_advertencia("No hay atenciones en espera.")
+    else:
+        imprimir_tabla_consultas(consultas)
+    ui.pausar()
 
 
 def marcar_inasistencia(consulta_service) -> None:
@@ -346,7 +362,8 @@ def submenu_recetas_farmacia(consulta_service) -> None:
 # =============================================================================
 
 def agendar_consulta(consulta_service) -> None:
-    ui.limpiar_y_encabezado("AGENDAR NUEVA CITA")
+    ui.limpiar_y_encabezado("AGENDAR NUEVA CITA (DÍAS HÁBILES: LUNES A SÁBADO)")
+    print("Nota: No se permite agendar citas normales en domingos ni festivos (solo urgencias).")
     id_mascota = ui.leer_entero("Ingrese ID de la mascota: ", nombre_campo="ID Mascota")
     fecha_agendada = ui.leer_fecha("Ingrese fecha y hora (YYYY-MM-DD HH:MM): ", nombre_campo="Fecha Agendada")
     motivo = ui.leer_texto("Ingrese motivo de la consulta: ", max_longitud=200, nombre_campo="Motivo")
@@ -374,8 +391,15 @@ def buscar_consulta_por_id(consulta_service) -> None:
         print(f"ID Consulta:      {consulta.id_consulta}")
         print(f"Mascota:          {consulta.mascota.nombre}")
         print(f"Propietario:      {consulta.mascota.propietario.nombre_completo} (RUT: {consulta.mascota.propietario.rut})")
+        print(f"Tipo Atención:    {'URGENCIA (Festivo/Domingo)' if consulta.es_urgencia else 'NORMAL'}")
         print(f"Fecha Agendada:   {consulta.fecha_agendada}")
         print(f"Estado:           {est_actual}")
+        tarifa_usd_str = f" (~${consulta.tarifa_base_usd:,.2f} USD)" if consulta.tarifa_base_usd is not None else ""
+        print(f"Tarifa Base:      ${consulta.tarifa_base:,} CLP{tarifa_usd_str}")
+        if consulta.es_urgencia:
+            print(f"Recargo Festivo:  {consulta.porcentaje_recargo_feriado}%")
+        monto_usd_str = f" (~${consulta.monto_total_usd:,.2f} USD)" if consulta.monto_total_usd is not None else ""
+        print(f"Monto Total:      ${consulta.monto_total:,} CLP{monto_usd_str}")
         print(f"Motivo:           {consulta.motivo or 'N/A'}")
         print(f"Inicio Atención:  {consulta.fecha_inicio_atencion or 'N/A'}")
         print(f"Fin Atención:     {consulta.fecha_fin_atencion or 'N/A'}")
@@ -847,11 +871,12 @@ def obtener_detalle_por_id(consulta_service) -> None:
 
 
 def imprimir_tabla_consultas(consultas: list) -> None:
-    print(f"\n{'ID':<6} | {'MASCOTA':<20} | {'FECHA AGENDADA':<19} | {'ESTADO':<15} | {'MOTIVO':<25}")
-    print("-" * 90)
+    print(f"\n{'ID':<6} | {'TIPO':<8} | {'MASCOTA':<18} | {'FECHA AGENDADA':<19} | {'ESTADO':<15} | {'TOTAL (CLP)':<12}")
+    print("-" * 88)
     for c in consultas:
         est_str = c.estado.value
-        print(f"{c.id_consulta:<6} | {c.mascota.nombre:<20} | {str(c.fecha_agendada):<19} | {est_str:<15} | {(c.motivo or 'N/A'):<25}")
+        tipo_str = "URGENCIA" if c.es_urgencia else "NORMAL"
+        print(f"{c.id_consulta:<6} | {tipo_str:<8} | {c.mascota.nombre:<18} | {str(c.fecha_agendada):<19} | {est_str:<15} | ${c.monto_total:<11,}")
 
 
 def imprimir_tabla_detalles(detalles: list) -> None:

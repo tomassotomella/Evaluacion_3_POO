@@ -14,7 +14,7 @@ class ConsultaDAO:
     def __init__(
         self,
         conexion_db: ConexionDB,
-        mascota_dao: MascotaDAO 
+        mascota_dao: MascotaDAO | None = None
     ):
         self.conexion_db = conexion_db
         self.mascota_dao = mascota_dao or MascotaDAO(conexion_db)
