@@ -1,4 +1,4 @@
-# Sistema de Gestión Clínica Veterinaria VetCare — Evaluación 2
+# Sistema de Gestión Clínica Veterinaria VetCare — Evaluación 3
 
 Este proyecto implementa un sistema modular para la gestión de una clínica
 veterinaria. La aplicación permite administrar propietarios, veterinarios,
@@ -6,7 +6,8 @@ especialidades, especies, mascotas, consultas, detalles de atención,
 medicamentos y recetas médicas.
 
 La solución está construida en **Python 3.11 o superior**, utiliza **SQLite3**
-como motor de persistencia y sigue una arquitectura en capas:
+como motor de persistencia y sigue una arquitectura en capas. Las dependencias
+externas se instalan desde `requirements.txt` dentro de un entorno virtual:
 
 - Presentación mediante menús de consola.
 - Servicios para la coordinación de la lógica de negocio.
@@ -336,15 +337,45 @@ duplicados por ID dentro de las colecciones de dominio.
 
 ---
 
-## Requisitos e importaciones
+## Requisitos e instalación
 
 ### Requisitos del sistema
 
-- **Python**: 3.10 o superior.
-- **Dependencias externas**: ninguna.
+- **Python**: 3.11 o superior.
+- **Entorno virtual**: recomendado para aislar las dependencias del proyecto.
+- **Dependencias externas**: se encuentran en `requirements.txt`.
 - **Motor de datos**: SQLite3, incluido en la biblioteca estándar de Python.
 - **Sistema operativo**: compatible con Windows, Linux y macOS, siempre que se
   ejecute desde la raíz de este módulo.
+
+### Crear el entorno virtual
+
+Desde la raíz del repositorio:
+
+```powershell
+python -m venv venv
+```
+
+En Windows:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+En Linux o macOS:
+
+```bash
+source venv/bin/activate
+```
+
+### Instalar dependencias
+
+Con el entorno virtual activo:
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
 ### Biblioteca estándar utilizada
 
@@ -356,26 +387,29 @@ duplicados por ID dentro de las colecciones de dominio.
 - `re`: validación de formatos, principalmente RUT y teléfono.
 - `pathlib` y `sys`: resolución de módulos dentro del paquete de modelos.
 
-No es necesario instalar paquetes con `pip`.
+La biblioteca estándar no requiere instalación adicional. Además, el proyecto
+utiliza paquetes externos declarados en `requirements.txt`, principalmente
+`requests` para consultar APIs.
 
 ---
 
 ## Estructura del repositorio
 
-Después del renombrado, la estructura principal del módulo es:
+La estructura principal del repositorio es:
 
 ```text
-evaluacion_2/
+evaluacion_3/
 |
 |-- README.md                         # Documentación de este proyecto
-|-- EJREADME.md                       # Ejemplo entregado por el profesor
 |-- main.py                           # Punto de entrada de la aplicación
+|-- requirements.txt                  # Dependencias externas
+|-- VetCareDominio.mmd                # Diagrama del dominio
 |
 |-- database/                         # Conexiones y archivos SQLite
 |   |-- __init__.py
 |   |-- conexion.py                   # ConexionDB y ConexionDBT
-|   |-- clinica_vetcare.db           # Base principal
-|   `-- clinica_vetcare_test.db      # Base utilizada por las pruebas
+|   |-- clinica_vetcare.db            # Base principal
+|   `-- clinica_vetcare_test.db       # Base utilizada por las pruebas
 |
 |-- models/                           # Entidades y reglas de dominio
 |   |-- __init__.py
@@ -387,6 +421,7 @@ evaluacion_2/
 |   |-- mascota.py
 |   |-- consulta.py
 |   |-- detalle_consulta.py
+|   |-- feriado.py
 |   |-- medicamento.py
 |   `-- receta_medica.py
 |
@@ -399,12 +434,15 @@ evaluacion_2/
 |   |-- veterinario_dao.py
 |   |-- mascota_dao.py
 |   |-- consulta_dao.py
+|   |-- feriado_dao.py
 |   `-- receta_medica_dao.py
 |
 |-- services/                         # Lógica de aplicación
 |   |-- persona_service.py
 |   |-- mascota_service.py
 |   |-- consulta_service.py
+|   |-- economia_service.py
+|   |-- feriado_service.py
 |   `-- farmacia_service.py
 |
 |-- screens/                          # Interfaz de consola
@@ -413,6 +451,7 @@ evaluacion_2/
 |   |-- veterinario_screens.py
 |   |-- mascotas_screen.py
 |   |-- consulta_screens.py
+|   |-- urgencia_screen.py
 |   `-- farmacia_screen.py
 |
 |-- exceptions/                       # Jerarquía de excepciones
@@ -425,11 +464,16 @@ evaluacion_2/
 |   |-- fechas.py
 |   `-- interfaz.py
 |
+|-- scripts/                          # Herramientas manuales de desarrollo
+|   |-- simular_feriado.py
+|   `-- restaurar_dia_habil.py
+|
 `-- tests/                            # Pruebas ejecutables
     |-- test_persistencia_sql.py
     |-- test_sql_a_dominio.py
     |-- test_excepciones.py
-    `-- test_seguridad_sqli.py
+    |-- test_seguridad_sqli.py
+    `-- test_feriados_urgencias.py
 ```
 
 Los directorios `__pycache__/` y los archivos `.pyc` son generados por Python y
@@ -446,10 +490,10 @@ necesario para respetar las relaciones entre tablas:
 
 1. Instancia `ConexionDB`.
 2. Instancia `EspecialidadDAO`, `PropietarioDAO` y `VeterinarioDAO`.
-3. Instancia `EspecieDAO`, `MascotaDAO` y `MedicamentoDAO`.
-4. Instancia `ConsultaDAO` y `RecetaMedicaDAO`.
-5. Instancia `PersonaService`, `MascotaService`, `ConsultaService` y
-   `FarmaciaService`.
+3. Instancia `EspecieDAO`, `MascotaDAO`, `MedicamentoDAO` y `DivisaDAO`.
+4. Instancia `ConsultaDAO`, `RecetaMedicaDAO` y `FeriadoDAO`.
+5. Instancia `PersonaService`, `MascotaService`, `EconomiaService`,
+   `FeriadoService`, `ConsultaService` y `FarmaciaService`.
 6. Entrega los servicios a `main_menu`.
 
 El punto de entrada también captura `KeyboardInterrupt` para terminar la
@@ -555,6 +599,20 @@ Contiene nombre comercial, precio y stock. Sus invariantes incluyen:
 - Excepción `SinStockException` cuando no hay unidades suficientes.
 - Umbral de stock crítico igual a 10 unidades.
 
+#### `Divisa`
+
+Representa una moneda o indicador cambiario con su código, nombre, valor y
+fecha de actualización. Permite convertir montos desde la divisa a pesos
+chilenos y desde pesos chilenos a la divisa. Los valores USD de consultas,
+medicamentos y recetas se calculan en memoria y no se persisten.
+
+#### `Feriado`
+
+Representa un feriado del calendario oficial mediante su fecha, nombre, tipo e
+indicador de irrenunciabilidad. Sus propiedades validan los datos antes de
+persistirlos y permiten que el sistema determine si una fecha corresponde a un
+feriado.
+
 #### `RecetaMedica`
 
 Relaciona una cantidad e instrucciones con un medicamento y un detalle de
@@ -597,6 +655,13 @@ Administra la tabla `MEDICAMENTO`:
 
 La tabla aplica restricciones SQL para precio positivo y stock no negativo.
 
+#### `DivisaDAO`
+
+Administra la tabla `DIVISA` y persiste la última cotización conocida de cada
+indicador. Permite actualizar una cotización, obtenerla por código y listar
+todas las divisas. La fecha almacenada permite que `EconomiaService` determine
+si el valor local sigue vigente.
+
 #### `PropietarioDAO`
 
 Administra la tabla `PROPIETARIO`, con búsquedas por ID, RUT y nombre. El RUT
@@ -627,6 +692,13 @@ relaciones mascota-detalle-veterinario al recuperar los objetos.
 Administra la tabla `RECETA_MEDICA`. Recupera el medicamento y el detalle de
 consulta relacionados al hidratar cada receta.
 
+#### `FeriadoDAO`
+
+Administra las tablas `FERIADO` y `FERIADO_CACHE`. Persiste los feriados
+normalizados recibidos desde la API, registra el año y mes de la caché vigente
+y reconstruye objetos `Feriado` al leerlos. La caché se actualiza
+mensualmente, según el alcance actual del proyecto.
+
 ### Capa de negocio (`services/`)
 
 #### `PersonaService`
@@ -645,6 +717,23 @@ registrar una mascota y permite consultar mascotas por propietario.
 Coordina consultas, detalles, veterinarios, mascotas, recetas y estados de
 atención. Centraliza el flujo de atención desde la agenda hasta la
 finalización.
+
+#### `EconomiaService`
+
+Obtiene cotizaciones desde la API de DolarAPI y coordina tres niveles de
+consulta: memoria RAM, caché persistente en SQLite y API externa. Valida y
+transforma la respuesta, actualiza `DivisaDAO` y utiliza una cotización
+histórica como contingencia cuando la API no está disponible. También expone
+la conversión de montos CLP a USD.
+
+#### `FeriadoService`
+
+Consulta la API oficial de feriados, transforma sus respuestas en objetos
+`Feriado` y sincroniza la caché mensual mediante `FeriadoDAO`. Centraliza las
+reglas de calendario: identifica domingos y feriados, determina días hábiles,
+autoriza urgencias únicamente en domingos o feriados y permite la contingencia
+de urgencias dominicales cuando la API falla. Las consultas normales se
+bloquean si no es posible verificar el calendario.
 
 #### `FarmaciaService`
 
@@ -688,12 +777,26 @@ propietario o veterinario informa `RUT`.
 - `interfaz.py`: limpia la consola, muestra encabezados y mensajes, solicita
   entradas y pausa los submenús.
 
+### Scripts auxiliares (`scripts/`)
+
+- `simular_feriado.py`: marca la fecha actual como feriado en la base
+  principal para realizar pruebas manuales del modo de guardia.
+- `restaurar_dia_habil.py`: elimina el feriado simulado de la fecha actual.
+
+Estos scripts modifican `database/clinica_vetcare.db` y no forman parte del
+flujo normal de la aplicación.
+
 ### Módulo de pruebas (`tests/`)
 
-- `test_persistencia_sql.py`: valida la inserción transaccional de 3 registros por cada una de las 9 entidades en la base de datos de pruebas (`ConexionDBT`), comprobando la asignación de IDs primarios y restricciones de integridad.
+- `test_persistencia_sql.py`: valida la inserción transaccional de registros
+  para las entidades cubiertas por el script en la base de datos de pruebas
+  (`ConexionDBT`), comprobando la asignación de IDs primarios y restricciones
+  de integridad.
 - `test_sql_a_dominio.py`: comprueba la lectura e hidratación completa de modelos desde SQLite a instancias de dominio en memoria, validando tipos de objetos y reconstrucción de relaciones navegables.
 - `test_excepciones.py`: evalúa la protección ante fallas de invariantes de dominio, duplicados por clave natural (`UNIQUE`) y restricciones de integridad referencial (`FOREIGN KEY`).
 - `test_seguridad_sqli.py`: audita las consultas con criterios de texto en todos los DAO contra inyecciones SQL mediante parámetros `?` y comodines parametrizados.
+- `test_feriados_urgencias.py`: verifica las reglas de calendario, agenda,
+  urgencias, recargos y reanudación de consultas.
 
 ---
 
@@ -704,18 +807,31 @@ propietario o veterinario informa `RUT`.
 Los comandos deben ejecutarse desde el directorio:
 
 ```powershell
-cd evaluacion_2
+cd evaluacion_3
 ```
 
-Se recomienda ejecutar los scripts de prueba como módulos. De esta forma
-Python encuentra correctamente los paquetes `database`, `dao`, `models`,
-`services` y `screens`.
+Antes de ejecutar la aplicación, crea y activa el entorno virtual e instala
+las dependencias según la sección [Requisitos e instalación](#requisitos-e-instalación).
+Los scripts deben ejecutarse como módulos para que Python encuentre
+correctamente los paquetes `database`, `dao`, `models`, `services` y
+`screens`.
 
 ### Ejecutar la aplicación
 
 ```powershell
 python main.py
 ```
+
+Para simular temporalmente que la fecha actual es feriado:
+
+```powershell
+python -m scripts.simular_feriado
+python main.py
+python -m scripts.restaurar_dia_habil
+```
+
+Estos scripts modifican la base principal únicamente para pruebas manuales.
+Debe ejecutarse siempre `restaurar_dia_habil` al finalizar.
 
 La aplicación abre el menú principal de VetCare y permite entrar a las cinco
 áreas funcionales:
@@ -736,6 +852,10 @@ database/clinica_vetcare_test.db
 ```
 
 Luego ejecute nuevamente el script de persistencia.
+
+Las pruebas son scripts ejecutables con `main()`, `print`, `assert` y
+`try/except`; no requieren `pytest`. Deben ejecutarse con el entorno virtual
+activo:
 
 #### 1. Persistencia SQL
 
@@ -827,8 +947,8 @@ Se guardaron 3 objetos por cada entidad.
 =================================================================
 ```
 
-**Resultado Obtenido**
-![Resultado de la prueba de persistencia SQL](docs/evidencias/resultado_persistencia_sql.png)
+**Resultado Obtenido:** la salida se muestra directamente en la terminal al
+ejecutar el comando anterior.
 
 #### 2. SQL a dominio e hidratación
 
@@ -935,9 +1055,8 @@ Resultado ID inexistente (debe ser None): None
 ==================================================
 ```
 
-**Resultado Obtenido**
-![Resultado de la lectura SQL a dominio](docs/evidencias/resultado_sql_a_dominio.png)
-![Resultado de la hidratación de relaciones](docs/evidencias/resultado_hidratacion_relaciones.png)
+**Resultado Obtenido:** la salida se muestra directamente en la terminal al
+ejecutar el comando anterior.
 
 #### 3. Resiliencia y excepciones
 
@@ -947,7 +1066,7 @@ python -m tests.test_excepciones
 
 La suite verifica:
 
-- Invariantes de las nueve entidades de dominio.
+- Invariantes de las entidades de dominio.
 - Rechazo de especialidades, especies, medicamentos, propietarios y
   veterinarios duplicados.
 - Protección de eliminaciones bloqueadas por claves foráneas.
@@ -998,8 +1117,8 @@ SUITE DE EXCEPCIONES — TODAS LAS ENTIDADES
 =================================================================
 ```
 
-**Resultado Obtenido:**
-![Resultado de las pruebas de excepciones e integridad](docs/evidencias/resultado_excepciones_integridad.png)
+**Resultado Obtenido:** la salida se muestra directamente en la terminal al
+ejecutar el comando anterior.
 
 #### 4. Auditoría contra SQL Injection
 
@@ -1060,8 +1179,8 @@ TODOS LOS DAO FUERON CERTIFICADOS CONTRA SQL INJECTION
 =================================================================
 ```
 
-**Resultado Obtenido:**
-![Resultado de la auditoría contra SQL injection](docs/evidencias/resultado_auditoria_sql_injection.png)
+**Resultado Obtenido:** la salida se muestra directamente en la terminal al
+ejecutar el comando anterior.
 
 ### Forma de ejecución de los scripts
 
@@ -1101,6 +1220,16 @@ Los archivos de `tests/` son scripts ejecutables con `main()`, `print`,
     directamente dentro de una sentencia SQL.
 15. **Hidratación completa**: los DAO reconstruyen las relaciones de dominio al
     leer las filas almacenadas.
+16. **Calendario laboral**: las consultas normales solo pueden agendarse y
+    comenzar en días hábiles; el sábado es laborable y el domingo no lo es.
+17. **Atenciones de urgencia**: las urgencias se registran directamente en
+    estado `EN_ATENCION`, con la misma fecha de agenda e inicio de atención,
+    y solo se permiten en domingos o feriados.
+18. **Recargos históricos**: el porcentaje de recargo y el monto total quedan
+    almacenados en la consulta; los equivalentes en USD solo existen en
+    memoria.
+19. **Caché de feriados**: la caché del calendario oficial se mantiene por
+    mes en SQLite y se reemplaza cuando deja de corresponder al mes actual.
 
 ---
 
@@ -1123,7 +1252,7 @@ SQL Injection: búsquedas parametrizadas certificadas
 ```
 
 La documentación de este archivo corresponde a la implementación de
-`evaluacion_2` por Tomás Soto Y Francisco Calquín.
+`evaluacion_3` por Tomás Soto Y Francisco Calquín.
 
 ---
 
@@ -1156,3 +1285,13 @@ Durante el ciclo de vida del desarrollo de la solución, se incorporaron herrami
    - Definición de una política de invalidación basada en fechas hábiles del mercado financiero (`date.today()` y retroceso a viernes durante fines de semana) para suprimir peticiones HTTP redundantes, eliminando la latencia en las vistas de catálogo y previniendo bloqueos por *rate limiting* de la API externa.
    - Enriquecimiento volátil en memoria RAM para medicamentos y recetas médicas en `FarmaciaService`, permitiendo valorizaciones bimonetarias (`CLP` y `USD`) en tiempo real durante la consulta de catálogo y el flujo transaccional de ventas sin alterar el esquema relacional en SQLite.
    - Implementación de un mecanismo de contingencia degradada (*fallback offline*), garantizando la continuidad operativa del sistema mediante el uso de la última cotización histórica almacenada en SQLite ante caídas de red, fallos de conectividad o indisponibilidad del servicio remoto.
+
+7. **Evaluación de alternativas para la caché de feriados**:
+   - Se utilizó IA para analizar e intentar diseñar una persistencia local de los
+     feriados mediante archivos JSON, incluyendo su lectura, escritura y
+     actualización como caché.
+   - Esta alternativa fue descartada porque el manejo y acceso de archivos JSON
+     todavía excedía los conocimientos actuales del equipo y no era necesario
+     para el alcance académico del proyecto.
+   - Finalmente, la caché de feriados se implementó en SQLite, tecnología ya
+     utilizada y comprendida dentro del proyecto.

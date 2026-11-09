@@ -1,6 +1,7 @@
 from utilities import interfaz as ui
 from exceptions import exceptions
 from models.consulta import EstadosConsulta
+from screens import veterinario_screens
 
 
 def main_consultas(consulta_service, farmacia_service) -> None:
@@ -123,6 +124,16 @@ def seleccionar_consulta_de_lista(consultas: list, accion: str):
         return seleccionada
 
 
+def mostrar_veterinarios_disponibles(consulta_service) -> bool:
+    veterinarios = consulta_service.listar_veterinarios()
+    if not veterinarios:
+        ui.mostrar_advertencia("No hay veterinarios registrados para atender.")
+        ui.pausar()
+        return False
+    veterinario_screens.imprimir_tabla_veterinarios(veterinarios)
+    return True
+
+
 def iniciar_atencion(consulta_service, farmacia_service) -> None:
     ui.limpiar_y_encabezado("INICIAR ATENCIÓN (PACIENTES AGENDADOS)")
     consultas = consulta_service.listar_consultas_por_estado(EstadosConsulta.AGENDADA)
@@ -136,6 +147,16 @@ def iniciar_atencion(consulta_service, farmacia_service) -> None:
     if seleccionada is None:
         print("\nOperación cancelada.")
         ui.pausar()
+        return
+
+    try:
+        consulta_service.validar_inicio_atencion(seleccionada)
+    except exceptions.ReglaNegocioError as error:
+        ui.mostrar_error(str(error))
+        ui.pausar()
+        return
+
+    if not mostrar_veterinarios_disponibles(consulta_service):
         return
 
     rut_vet = ui.leer_rut("Ingrese RUT del veterinario que atenderá: ")

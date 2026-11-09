@@ -33,7 +33,7 @@ class Persona:
     def rut(self) -> str:
         return self._rut
     @rut.setter
-    def rut(self, valor: str) -> None:
+    def rut(self, valor: str):
         rut_valido = ValidadorEntradas.validar_rut(valor)
         self._rut = rut_valido
 
@@ -41,7 +41,7 @@ class Persona:
     def nombre_completo(self) -> str:
         return self._nombre_completo
     @nombre_completo.setter
-    def nombre_completo(self, valor: str) -> None:
+    def nombre_completo(self, valor: str):
         nombre_valido = ValidadorEntradas.validar_nombre_alfabetico(
             valor,
             nombre_campo='Nombre Completo'
@@ -52,7 +52,7 @@ class Persona:
     def telefono(self) -> str:
         return self._telefono
     @telefono.setter
-    def telefono(self, valor: str) -> None:
+    def telefono(self, valor: str):
         fono_valido = ValidadorEntradas.validar_telefono(valor)
         self._telefono = fono_valido
     

@@ -73,6 +73,17 @@ class ConsultaService:
             self.consulta_dao.obtener_consulta_por_id(id_valido)
         )
 
+    def validar_inicio_atencion(self, consulta: Consulta) -> None:
+        """Valida las reglas de calendario antes de solicitar datos clínicos."""
+        if not consulta.es_urgencia:
+            self._validar_fecha_consulta_normal(
+                datetime.now(),
+                " para iniciar la atención"
+            )
+
+    def listar_veterinarios(self):
+        return self.persona_service.listar_veterinarios()
+
     def listar_consultas(self) -> list[Consulta]:
         return self._enriquecer_consultas(self.consulta_dao.listar_consultas())
 
@@ -152,14 +163,7 @@ class ConsultaService:
         tarifa_base: int | None = None,
     ) -> Consulta:
         ahora = datetime.now()
-        try:
-            self.feriado_service.validar_urgencia_permitida(ahora.date())
-        except exceptions.ServicioExternoException as error:
-            raise exceptions.ReglaNegocioError(
-                f"No se pudo consultar el servicio de feriados: {error}. "
-                "La urgencia solo puede autorizarse fuera de domingo si se "
-                "confirma que hoy es feriado."
-            ) from error
+        self.validar_registro_urgencia(ahora)
 
         consulta = Consulta(
             mascota=self.mascota_service.obtener_mascota_por_id(id_mascota),
@@ -181,14 +185,23 @@ class ConsultaService:
         )
         return self.registrar_atencion(consulta, rut_veterinario)
 
+    def validar_registro_urgencia(self, fecha: datetime | None = None) -> None:
+        fecha_validacion = fecha or datetime.now()
+        try:
+            self.feriado_service.validar_urgencia_permitida(
+                fecha_validacion.date()
+            )
+        except exceptions.ServicioExternoException as error:
+            raise exceptions.ReglaNegocioError(
+                f"No se pudo consultar el servicio de feriados: {error}. "
+                "La urgencia solo puede autorizarse fuera de domingo si se "
+                "confirma que hoy es feriado."
+            ) from error
+
     def iniciar_atencion(self, id_consulta: int | str, rut_veterinario: str) -> Consulta:
         consulta = self.obtener_consulta_por_id(id_consulta)
 
-        if not consulta.es_urgencia:
-            self._validar_fecha_consulta_normal(
-                datetime.now(),
-                " para iniciar la atención"
-            )
+        self.validar_inicio_atencion(consulta)
 
         consulta.iniciar_atencion()
         detalle = DetalleConsulta(

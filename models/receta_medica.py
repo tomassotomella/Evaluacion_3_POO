@@ -40,14 +40,14 @@ class RecetaMedica:
     def cantidad(self) -> int:
         return self._cantidad
     @cantidad.setter
-    def cantidad(self, valor: int) -> None:
+    def cantidad(self, valor: int):
         self._cantidad = ValidadorEntradas.validar_entero(valor, 'Cantidad', minimo = 1)
 
     @property
     def instrucciones(self) -> str:
         return self._instrucciones
     @instrucciones.setter
-    def instrucciones(self, texto: str) -> None:
+    def instrucciones(self, texto: str):
         instruccion = ValidadorEntradas.validar_longitud(
             texto,
             max=4000,
@@ -59,7 +59,7 @@ class RecetaMedica:
     def medicamento(self) -> Medicamento:
         return self._medicamento
     @medicamento.setter
-    def medicamento(self, valor: Medicamento) -> None:
+    def medicamento(self, valor: Medicamento):
         medicamento_valido = ValidadorEntradas.validar_instancia(valor, Medicamento, 'Medicamento')
         self._medicamento = medicamento_valido
 
@@ -67,7 +67,7 @@ class RecetaMedica:
     def detalle(self) -> DetalleConsulta:
         return self._detalle
     @detalle.setter
-    def detalle(self, valor: DetalleConsulta) -> None:
+    def detalle(self, valor: DetalleConsulta):
         from detalle_consulta import DetalleConsulta
 
         detalle_valido = ValidadorEntradas.validar_instancia(valor, DetalleConsulta, 'Detalle de Consulta')

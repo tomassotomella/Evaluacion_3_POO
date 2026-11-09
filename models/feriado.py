@@ -27,7 +27,7 @@ class Feriado:
         return self._fecha
 
     @fecha.setter
-    def fecha(self, valor: date) -> None:
+    def fecha(self, valor: date):
         self._fecha = ValidadorEntradas.validar_fecha_calendario(
             valor,
             "Fecha del feriado"
@@ -38,7 +38,7 @@ class Feriado:
         return self._nombre
 
     @nombre.setter
-    def nombre(self, valor: str) -> None:
+    def nombre(self, valor: str):
         self._nombre = ValidadorEntradas.validar_no_vacio(
             valor,
             "Nombre del feriado"
@@ -49,7 +49,7 @@ class Feriado:
         return self._tipo
 
     @tipo.setter
-    def tipo(self, valor: str) -> None:
+    def tipo(self, valor: str):
         self._tipo = ValidadorEntradas.validar_no_vacio(
             valor,
             "Tipo de feriado"
@@ -60,7 +60,7 @@ class Feriado:
         return self._es_irrenunciable
 
     @es_irrenunciable.setter
-    def es_irrenunciable(self, valor: bool) -> None:
+    def es_irrenunciable(self, valor: bool):
         self._es_irrenunciable = ValidadorEntradas.validar_instancia(
             valor,
             bool,

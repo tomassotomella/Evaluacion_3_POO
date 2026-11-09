@@ -98,6 +98,12 @@ class FarmaciaService:
             self._enriquecer_medicamento(r.medicamento)
         return recetas
 
+    def listar_recetas_disponibles_para_despacho(self) -> list[RecetaMedica]:
+        recetas = self.consulta_service.listar_recetas()
+        for receta in recetas:
+            self._enriquecer_medicamento(receta.medicamento)
+        return recetas
+
     def despachar_receta(self, id_receta: int | str) -> int:
         receta = self.consulta_service.obtener_receta_por_id(id_receta)
         self.descontar_stock(receta.medicamento.id_medicamento, receta.cantidad)

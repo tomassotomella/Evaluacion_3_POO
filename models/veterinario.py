@@ -37,7 +37,7 @@ class Veterinario(Persona):
     def especialidad(self) -> Especialidad:
         return self._especialidad
     @especialidad.setter
-    def especialidad(self, valor: Especialidad) -> None:
+    def especialidad(self, valor: Especialidad):
         especialidad_valida = ValidadorEntradas.validar_instancia(valor, Especialidad, 'Especialidad')
         self._especialidad = especialidad_valida
 

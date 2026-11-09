@@ -43,7 +43,7 @@ class Especialidad:
         return self._nombre_especialidad
 
     @nombre_especialidad.setter
-    def nombre_especialidad(self, valor: str) -> None:
+    def nombre_especialidad(self, valor: str):
         nombre_valido = ValidadorEntradas.validar_nombre_alfabetico(
             valor,
             nombre_campo='Nombre de la especialidad'
@@ -55,7 +55,7 @@ class Especialidad:
         return self._descripcion
 
     @descripcion.setter
-    def descripcion(self, texto: str) -> None:
+    def descripcion(self, texto: str):
         descripcion_valida = ValidadorEntradas.validar_longitud(texto, max = 100, nombre = 'descripción')
         self._descripcion = descripcion_valida
 

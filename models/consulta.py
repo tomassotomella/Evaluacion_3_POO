@@ -80,7 +80,7 @@ class Consulta:
     def fecha_agendada(self) -> datetime:
         return self._fecha_agendada
     @fecha_agendada.setter
-    def fecha_agendada(self, fecha: datetime) -> None:
+    def fecha_agendada(self, fecha: datetime):
         es_nueva = self._id_consulta is None
         self._fecha_agendada = self._validar_fecha_agendada(
             fecha,
@@ -99,7 +99,7 @@ class Consulta:
     def motivo(self) -> str:
         return self._motivo
     @motivo.setter
-    def motivo(self, valor: str | None) -> None:
+    def motivo(self, valor: str | None):
         if valor is None:
             self._motivo = ""
             return
@@ -114,7 +114,7 @@ class Consulta:
     def mascota(self) -> Mascota:
         return self._mascota
     @mascota.setter
-    def mascota(self, mascota: Mascota) -> None:
+    def mascota(self, mascota: Mascota):
         from mascota import Mascota
         mascota_valida = ValidadorEntradas.validar_instancia(mascota, Mascota, 'Mascota')
         self._mascota = mascota_valida
@@ -123,7 +123,7 @@ class Consulta:
     def detalle(self) -> DetalleConsulta | None:
         return self._detalle
     @detalle.setter
-    def detalle(self, detalle: DetalleConsulta | None) -> None:
+    def detalle(self, detalle: DetalleConsulta | None):
         if detalle is not None:
             from detalle_consulta import DetalleConsulta
             detalle = ValidadorEntradas.validar_instancia(detalle, DetalleConsulta, 'Detalle de la Consulta', True)
@@ -133,7 +133,7 @@ class Consulta:
     def es_urgencia(self) -> bool:
         return self._es_urgencia
     @es_urgencia.setter
-    def es_urgencia(self, valor: bool) -> None:
+    def es_urgencia(self, valor: bool):
         self._es_urgencia = ValidadorEntradas.validar_instancia(
             valor,
             bool,

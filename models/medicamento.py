@@ -51,7 +51,7 @@ class Medicamento:
     def nombre_comercial(self) -> str:
         return self._nombre_comercial
     @nombre_comercial.setter
-    def nombre_comercial(self, valor: str) -> None:
+    def nombre_comercial(self, valor: str):
         nombre_limpio = ValidadorEntradas.validar_longitud(
             valor,
             max=4000,
@@ -63,7 +63,7 @@ class Medicamento:
     def precio(self) -> int:
         return self._precio
     @precio.setter
-    def precio(self, precio: int) -> None:
+    def precio(self, precio: int):
         precio_valido = ValidadorEntradas.validar_entero(
             precio,
             'precio',
@@ -76,7 +76,7 @@ class Medicamento:
     def stock(self) -> int:
         return self._stock
     @stock.setter
-    def stock(self, valor: int) -> None:
+    def stock(self, valor: int):
         stock_valido = ValidadorEntradas.validar_entero(
             valor,
             'stock',

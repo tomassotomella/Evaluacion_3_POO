@@ -277,8 +277,20 @@ def mostrar_comprobante_despacho(total_clp: int, economia_service) -> None:
     print("-" * ancho)
 
 
+def mostrar_recetas_disponibles_para_despacho(farmacia_service) -> bool:
+    recetas = farmacia_service.listar_recetas_disponibles_para_despacho()
+    if not recetas:
+        ui.mostrar_advertencia("No hay recetas registradas para despachar.")
+        ui.pausar()
+        return False
+    imprimir_tabla_recetas(recetas)
+    return True
+
+
 def despachar_receta(farmacia_service) -> None:
     ui.limpiar_y_encabezado("DESPACHAR RECETA")
+    if not mostrar_recetas_disponibles_para_despacho(farmacia_service):
+        return
     id_receta = ui.leer_entero("Ingrese ID de la receta a despachar: ", nombre_campo="ID Receta")
 
     try:
@@ -305,6 +317,8 @@ def despachar_receta(farmacia_service) -> None:
 
 def despachar_recetas_seleccionadas(farmacia_service) -> None:
     ui.limpiar_y_encabezado("DESPACHAR RECETAS SELECCIONADAS")
+    if not mostrar_recetas_disponibles_para_despacho(farmacia_service):
+        return
     ui.mostrar_advertencia("Ingrese los IDs de las recetas a despachar. Finalice con 0.")
 
     ids_recetas = []

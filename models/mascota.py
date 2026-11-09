@@ -44,7 +44,7 @@ class Mascota:
     def nombre(self) -> str:
         return self._nombre 
     @nombre.setter
-    def nombre(self, valor: str) -> None:
+    def nombre(self, valor: str):
         nombre_limpio = ValidadorEntradas.validar_longitud(
             valor,
             max=4000,
@@ -56,14 +56,14 @@ class Mascota:
     def fecha_nacimiento(self) -> date:
         return self._fecha_nacimiento
     @fecha_nacimiento.setter
-    def fecha_nacimiento(self, fecha: str | date | datetime) -> None:
+    def fecha_nacimiento(self, fecha: str | date | datetime):
         self._fecha_nacimiento = self.validar_fecha_nacimiento(fecha, self.especie.esperanza_vida_max)
 
     @property
     def especie(self) -> Especie:
         return self._especie
     @especie.setter
-    def especie(self, valor: Especie) -> None:
+    def especie(self, valor: Especie):
         especie_valida = ValidadorEntradas.validar_instancia(valor, Especie, 'Especie')
         self._especie = especie_valida
 
@@ -71,7 +71,7 @@ class Mascota:
     def propietario(self) -> Propietario:
         return self._propietario
     @propietario.setter
-    def propietario(self, valor: Propietario) -> None:
+    def propietario(self, valor: Propietario):
         propietario_valido = self._validar_propietario(valor)
         self._propietario = propietario_valido
 

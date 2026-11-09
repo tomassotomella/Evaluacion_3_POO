@@ -31,7 +31,7 @@ class Especie:
     def nombre_especie(self) -> str:
         return self._nombre_especie
     @nombre_especie.setter
-    def nombre_especie(self, nombre: str) -> None:
+    def nombre_especie(self, nombre: str):
         nombre_valido = ValidadorEntradas.validar_nombre_alfabetico(
                     nombre,
                     nombre_campo='Nombre de la Especie'
@@ -42,7 +42,7 @@ class Especie:
     def esperanza_vida_max(self) -> int:
         return self._esperanza_vida_maxima
     @esperanza_vida_max.setter
-    def esperanza_vida_max(self, anios: int) -> None:
+    def esperanza_vida_max(self, anios: int):
         esperanza = ValidadorEntradas.validar_entero(anios,'Esperanza de Vida Máxima', minimo = 1)
         if esperanza > 200:
             raise exceptions.ReglaNegocioError('La esperanza de vida máxima no puede superar los 200 años.')

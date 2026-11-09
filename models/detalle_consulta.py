@@ -59,7 +59,7 @@ class DetalleConsulta:
     def consulta(self) -> Consulta | None:
         return self._consulta
     @consulta.setter
-    def consulta(self, valor: None | Consulta) -> None:
+    def consulta(self, valor: None | Consulta):
         if valor is None:
             self._consulta = None
             return
@@ -71,7 +71,7 @@ class DetalleConsulta:
     def veterinario(self) -> Veterinario:
         return self._veterinario
     @veterinario.setter
-    def veterinario(self, valor: Veterinario) -> None:
+    def veterinario(self, valor: Veterinario):
         from veterinario import Veterinario
         veterinario_valido = ValidadorEntradas.validar_instancia(valor, Veterinario, 'Veterinario')
         self._veterinario = veterinario_valido
@@ -80,7 +80,7 @@ class DetalleConsulta:
     def diagnostico(self) -> str | None:
         return self._diagnostico
     @diagnostico.setter
-    def diagnostico(self, valor: str | None) -> None:
+    def diagnostico(self, valor: str | None):
         if valor is None:
             self._diagnostico = None
             return
@@ -91,7 +91,7 @@ class DetalleConsulta:
     def tratamiento(self) -> str | None:
         return self._tratamiento
     @tratamiento.setter
-    def tratamiento(self, valor: str | None) -> None:
+    def tratamiento(self, valor: str | None):
         if valor is None:
             self._tratamiento = None
             return
@@ -102,7 +102,7 @@ class DetalleConsulta:
     def observaciones(self) -> str | None:
         return self._observaciones
     @observaciones.setter
-    def observaciones(self, valor: str | None) -> None:
+    def observaciones(self, valor: str | None):
         if valor is None:
             self._observaciones = None
             return
