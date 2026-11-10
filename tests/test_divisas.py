@@ -14,14 +14,14 @@ def certificar_flujo_completo():
 
     # 1. Consumo y Deserialización desde la red
     print("\n[PASO 1] Consultando cotización del dólar desde el servicio web...")
-    dolar_remoto = EconomiaService.obtener_indicador("usd")
+    conexion = ConexionDBT()
+    dolar_remoto = EconomiaService(DivisaDAO(conexion))._consultar_indicador("usd")
     assert dolar_remoto is not None, "Error: No se pudo obtener el dólar desde la API externa."
     assert isinstance(dolar_remoto, Divisa), "El servicio debió retornar una instancia de Divisa."
     print(f" -> Éxito: Objeto deserializado correctamente: {dolar_remoto.nombre} = ${dolar_remoto.valor} CLP")
 
     # 2. Persistencia en SQLite local
     print("\n[PASO 2] Guardando objeto Divisa en la base de datos local...")
-    conexion = ConexionDBT()
     dao = DivisaDAO(conexion)
     guardado = dao.actualizar(dolar_remoto)
     assert guardado is True, "Error: No se pudo persistir la divisa en la base de datos."

@@ -27,39 +27,26 @@ class EconomiaService:
         self._cache: dict[str, Divisa] = {}
 
 
-    @classmethod
-    def obtener_indicador(cls, tipo_indicador: str) -> Divisa:
-        """Mantiene el acceso de clase existente usando un cliente predeterminado."""
-        return cls._consultar_indicador(tipo_indicador, ClienteResiliente())
-
-    def _obtener_indicador(self, tipo_indicador: str) -> Divisa:
-        return self._consultar_indicador(tipo_indicador, self.cliente_http)
-
-    @classmethod
-    def _consultar_indicador(
-        cls,
-        tipo_indicador: str,
-        cliente_http: ClienteResiliente,
-    ) -> Divisa:
+    def _consultar_indicador(self, tipo_indicador: str) -> Divisa:
         indicador_seguro = ValidadorEntradas.sanitizar_codigo_indicador(tipo_indicador)
-        endpoint = f"{cls.URL_BASE}/{indicador_seguro}"
-        respuesta = cliente_http.ejecutar_get(
+        endpoint = f"{self.URL_BASE}/{indicador_seguro}"
+        respuesta = self.cliente_http.ejecutar_get(
             endpoint,
-            servicio=cls.SERVICIO_NOMBRE,
-            cabeceras=cls.HEADERS,
+            servicio=self.SERVICIO_NOMBRE,
+            cabeceras=self.HEADERS,
         )
 
         try:
             payload = respuesta.json()
         except ValueError as error_json:
             raise FormatoRespuestaInvalidoException(
-                servicio=cls.SERVICIO_NOMBRE,
+                servicio=self.SERVICIO_NOMBRE,
                 motivo=f"La respuesta no es un JSON válido: {error_json}"
             ) from error_json
 
         if not isinstance(payload, dict):
             raise FormatoRespuestaInvalidoException(
-                servicio=cls.SERVICIO_NOMBRE,
+                servicio=self.SERVICIO_NOMBRE,
                 motivo="El cuerpo de la respuesta no es un objeto JSON estructurado."
             )
 
@@ -70,13 +57,13 @@ class EconomiaService:
 
         if valor is None:
             raise FormatoRespuestaInvalidoException(
-                servicio=cls.SERVICIO_NOMBRE,
+                servicio=self.SERVICIO_NOMBRE,
                 motivo="No se encontró el valor de cotización ('venta') en la respuesta."
             )
 
         if not fecha_raw:
             raise FormatoRespuestaInvalidoException(
-                servicio=cls.SERVICIO_NOMBRE,
+                servicio=self.SERVICIO_NOMBRE,
                 motivo="No se encontró la fecha de actualización en la respuesta."
             )
 
@@ -90,7 +77,7 @@ class EconomiaService:
             )
         except (ValueError, TypeError) as error_datos:
             raise FormatoRespuestaInvalidoException(
-                servicio=cls.SERVICIO_NOMBRE,
+                servicio=self.SERVICIO_NOMBRE,
                 motivo=f"Error al procesar los tipos de datos de la divisa: {error_datos}"
             ) from error_datos
 
@@ -123,8 +110,7 @@ class EconomiaService:
         3. Nivel L3 (API HTTP): Sincroniza desde el servicio remoto y persiste en BD y RAM.
         4. Modo Contingencia: Si la API falla, utiliza el registro previo guardado en SQLite.
         """
-        codigo_limpio = codigo.strip().lower()
-        codigo_normalizado = codigo_limpio
+        codigo_normalizado = codigo.strip().lower()
         hoy = date.today()
         fecha_esperada = self._obtener_fecha_habil_esperada(hoy)
 
@@ -148,7 +134,7 @@ class EconomiaService:
 
         # 3. CONSUMIR SERVICIO EXTERNO (API HTTP)
         try:
-            divisa_fresca = self._obtener_indicador(codigo_normalizado)
+            divisa_fresca = self._consultar_indicador(codigo_normalizado)
             self.divisa_dao.actualizar(divisa_fresca)
             self._cache[codigo_normalizado] = divisa_fresca #guardar en cache
             return divisa_fresca
