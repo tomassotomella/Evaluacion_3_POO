@@ -3,6 +3,10 @@ class VetCareException(Exception):
     pass
 
 
+class ConfiguracionException(VetCareException):
+    """Lanzada cuando falta configuración requerida para una integración."""
+
+
 class DominioException(VetCareException):
     """Excepción base para errores propios del dominio."""
     pass
@@ -122,3 +126,16 @@ class FormatoRespuestaInvalidoException(ServicioExternoException):
         self.motivo = motivo
         super().__init__(servicio, f"Respuesta malformada o incompleta: {motivo}")
 
+
+class ErrorWeatherAPIException(ServicioExternoException):
+    """Error de WeatherAPI con un mensaje que nunca incluye credenciales."""
+
+    def __init__(
+        self,
+        mensaje: str,
+        status_code: int | None = None,
+        codigo_api: int | None = None,
+    ):
+        self.status_code = status_code
+        self.codigo_api = codigo_api
+        super().__init__("WeatherAPI", mensaje)

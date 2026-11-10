@@ -8,7 +8,8 @@ if _models_dir not in sys.path:
 # Mapear los módulos para que `from models.X import ...` y `from X import ...` apunten al mismo módulo exacto
 for mod_name in [
     'especialidad', 'especie', 'persona', 'propietario', 'veterinario',
-    'medicamento', 'mascota', 'detalle_consulta', 'receta_medica', 'consulta'
+    'medicamento', 'mascota', 'detalle_consulta', 'receta_medica', 'consulta',
+    'clima'
 ]:
     mod = __import__(mod_name)
     sys.modules[f'models.{mod_name}'] = mod
@@ -23,6 +24,7 @@ from mascota import Mascota
 from detalle_consulta import DetalleConsulta
 from receta_medica import RecetaMedica
 from consulta import Consulta, EstadosConsulta
+from clima import Clima
 
 __all__ = [
     'Especialidad',
@@ -35,6 +37,6 @@ __all__ = [
     'DetalleConsulta',
     'RecetaMedica',
     'Consulta',
-    'EstadosConsulta'
+    'EstadosConsulta',
+    'Clima'
 ]
-

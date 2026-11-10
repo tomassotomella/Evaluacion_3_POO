@@ -377,6 +377,26 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
+### Configurar WeatherAPI
+
+La aplicación no incluye una clave real. Copia el ejemplo y agrega tu propia
+clave de WeatherAPI en `.env`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Edita `.env` para que contenga:
+
+```text
+WEATHER_API_KEY=tu_clave_de_weatherapi
+```
+
+El archivo `.env` está excluido de Git. No compartas ni confirmes ese archivo;
+`.env.example` solo contiene el nombre de la variable. Si la clave falta o la
+API no está disponible, VetCare sigue funcionando y muestra el clima como
+offline.
+
 ### Biblioteca estándar utilizada
 
 - `sqlite3`: conexión y persistencia relacional.
@@ -494,7 +514,8 @@ necesario para respetar las relaciones entre tablas:
 4. Instancia `ConsultaDAO`, `RecetaMedicaDAO` y `FeriadoDAO`.
 5. Instancia `PersonaService`, `MascotaService`, `EconomiaService`,
    `FeriadoService`, `ConsultaService` y `FarmaciaService`.
-6. Entrega los servicios a `main_menu`.
+6. Instancia un `ClienteHTTPResiliente`, `ServicioClima` y
+   `AlertaZoosanitariaService`; entrega los servicios al menú y las pantallas.
 
 El punto de entrada también captura `KeyboardInterrupt` para terminar la
 sesión de consola sin mostrar un traceback.
@@ -544,8 +565,9 @@ Clase base de propietarios y veterinarios. Valida:
 
 #### `Propietario`
 
-Extiende `Persona` y mantiene las mascotas asociadas. Evita agregar dos veces
-la misma mascota al historial en memoria.
+Extiende `Persona`, valida y conserva la comuna del propietario y mantiene las
+mascotas asociadas. Evita agregar dos veces la misma mascota al historial en
+memoria.
 
 #### `Veterinario`
 
@@ -564,8 +586,9 @@ de vida debe ser un entero positivo y no puede superar los 200 años.
 
 #### `Mascota`
 
-Relaciona nombre, fecha de nacimiento, especie y propietario. La fecha no puede
-ser futura ni superar la esperanza de vida máxima de la especie.
+Relaciona nombre, raza, fecha de nacimiento, especie y propietario. La edad se
+calcula desde la fecha de nacimiento, que no puede ser futura ni superar la
+esperanza de vida máxima de la especie.
 
 #### `Consulta`
 
@@ -665,7 +688,9 @@ si el valor local sigue vigente.
 #### `PropietarioDAO`
 
 Administra la tabla `PROPIETARIO`, con búsquedas por ID, RUT y nombre. El RUT
-es una clave única.
+es una clave única y persiste la comuna. Si la tabla existente no tiene la
+columna, la agrega conservando los registros y asigna `Los Ángeles, Chile` a
+los propietarios anteriores.
 
 #### `VeterinarioDAO`
 
@@ -675,7 +700,8 @@ insertar y permite buscar por ID, RUT o nombre.
 #### `MascotaDAO`
 
 Administra la tabla `MASCOTA`. Persiste las claves foráneas de especie y
-propietario y permite listar las mascotas de un propietario.
+propietario, la raza y permite listar las mascotas de un propietario. Las
+bases existentes reciben la columna `raza` con el valor `Sin especificar`.
 
 #### `ConsultaDAO`
 
@@ -735,6 +761,26 @@ autoriza urgencias únicamente en domingos o feriados y permite la contingencia
 de urgencias dominicales cuando la API falla. Las consultas normales se
 bloquean si no es posible verificar el calendario.
 
+#### `ServicioClima`
+
+Consulta las condiciones actuales de WeatherAPI mediante el cliente HTTP
+resiliente inyectado. Lee `WEATHER_API_KEY` exclusivamente desde `.env`,
+valida la respuesta y la transforma al modelo `Clima`; no guarda datos
+climáticos ni contiene reglas veterinarias. El menú usa `Los Ángeles, Chile`
+como localidad predeterminada y muestra un estado offline si la consulta falla.
+
+#### `AlertaZoosanitariaService`
+
+Evalúa un `Clima` y una mascota sin realizar peticiones HTTP ni acceder a la
+pantalla. Las reglas iniciales son:
+
+- Más de 28 °C: alerta de golpe de calor para perros de razas braquicéfalas
+  reconocidas por el servicio.
+- Menos de 8 °C: alerta preventiva para pacientes de 7 años o más, como
+  criterio inicial de paciente geriátrico.
+- Precipitación actual de 10 mm o más: alerta de precipitación intensa. Este
+  umbral se aplica al campo `precip_mm` de la respuesta actual de WeatherAPI.
+
 #### `FarmaciaService`
 
 Coordina medicamentos y recetas. Permite registrar medicamentos, consultar
@@ -756,7 +802,10 @@ recetas comprobando la disponibilidad.
 
 Los submódulos contienen los flujos de alta, consulta, búsqueda, actualización
 y eliminación de cada área. Las pantallas capturan las excepciones de dominio
-y las muestran mediante las funciones de `utilities.interfaz`.
+y las muestran mediante las funciones de `utilities.interfaz`. El encabezado
+incluye el estado del clima para la sucursal de Los Ángeles, Chile. La ficha del
+propietario consulta una vez el clima de su comuna y reutiliza ese resultado
+para evaluar las mascotas de la ficha.
 
 ### Módulo de excepciones (`exceptions/`)
 
@@ -797,6 +846,9 @@ flujo normal de la aplicación.
 - `test_seguridad_sqli.py`: audita las consultas con criterios de texto en todos los DAO contra inyecciones SQL mediante parámetros `?` y comodines parametrizados.
 - `test_feriados_urgencias.py`: verifica las reglas de calendario, agenda,
   urgencias, recargos y reanudación de consultas.
+- `test_servicio_clima.py`: prueba WeatherAPI con respuestas simuladas, errores,
+  configuración `.env`, alertas zoosanitarias, visualización offline y
+  migración/persistencia de comuna y raza. No requiere acceso a Internet.
 
 ---
 
@@ -812,6 +864,9 @@ cd evaluacion_3
 
 Antes de ejecutar la aplicación, crea y activa el entorno virtual e instala
 las dependencias según la sección [Requisitos e instalación](#requisitos-e-instalación).
+Configura también WeatherAPI siguiendo la sección
+[Configurar WeatherAPI](#configurar-weatherapi); la clave no es necesaria para
+ejecutar las pruebas del servicio climático.
 Los scripts deben ejecutarse como módulos para que Python encuentre
 correctamente los paquetes `database`, `dao`, `models`, `services` y
 `screens`.
@@ -841,6 +896,12 @@ La aplicación abre el menú principal de VetCare y permite entrar a las cinco
 3. Mascotas y especies.
 4. Consultas, atenciones, detalles y recetas.
 5. Farmacia y stock.
+
+Para ejecutar las pruebas aisladas de WeatherAPI:
+
+```powershell
+python -m unittest discover -s tests -p "test_servicio_clima.py"
+```
 
 ### Flujo recomendado para las pruebas
 

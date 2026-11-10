@@ -20,9 +20,12 @@ class Propietario(Persona):
             nombre_completo: str, 
             telefono: str,
             id_propietario: int | None = None,
+            comuna: str = "Los Ángeles, Chile",
             ):
         super().__init__(rut, nombre_completo, telefono, id_propietario)
         self._mascotas = []
+        self._comuna = ""
+        self.comuna = comuna
 
     @property
     def id_propietario(self) -> int:
@@ -31,6 +34,21 @@ class Propietario(Persona):
     @property
     def mascotas(self) -> list[Mascota]:
         return self._mascotas.copy()
+
+    @property
+    def comuna(self) -> str:
+        return self._comuna
+
+    @comuna.setter
+    def comuna(self, valor: str) -> None:
+        self._comuna = ValidadorEntradas.validar_longitud(
+            valor,
+            max=120,
+            nombre="Comuna",
+        )
+
+    def actualizar_comuna(self, nueva_comuna: str) -> None:
+        self.comuna = nueva_comuna
     
     def agregar_mascota(self, mascota: Mascota) -> None:
         from mascota import Mascota

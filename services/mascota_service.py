@@ -54,13 +54,15 @@ class MascotaService:
             nombre: str,
             fecha_nacimiento: date,
             id_especie: int | str,
-            rut_propietario: str
+            rut_propietario: str,
+            raza: str = "Sin especificar",
     ) -> Mascota:
         mascota = Mascota(
             nombre = nombre,
             fecha_nacimiento = fecha_nacimiento,
             especie = self.obtener_especie_por_id(id_especie),
-            propietario = self.persona_service.obtener_propietario_por_rut(rut_propietario)
+            propietario = self.persona_service.obtener_propietario_por_rut(rut_propietario),
+            raza = raza,
         )
         self.mascota_dao.insertar(mascota)
         return mascota
@@ -94,6 +96,12 @@ class MascotaService:
     def cambiar_nombre(self, id_mascota: int | str, nuevo_nombre: str) -> Mascota:
         mascota = self.obtener_mascota_por_id(id_mascota)
         mascota.actualizar_nombre(nuevo_nombre)
+        self.mascota_dao.actualizar(mascota)
+        return mascota
+
+    def cambiar_raza(self, id_mascota: int | str, nueva_raza: str) -> Mascota:
+        mascota = self.obtener_mascota_por_id(id_mascota)
+        mascota.raza = nueva_raza
         self.mascota_dao.actualizar(mascota)
         return mascota
     

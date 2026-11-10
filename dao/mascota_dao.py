@@ -26,12 +26,22 @@ class MascotaDAO:
             fecha_nacimiento TEXT NOT NULL,
             id_especie INTEGER NOT NULL,
             id_propietario INTEGER NOT NULL,
+            raza TEXT NOT NULL DEFAULT 'Sin especificar',
             FOREIGN KEY (id_especie) REFERENCES ESPECIE(id_especie),
             FOREIGN KEY (id_propietario) REFERENCES PROPIETARIO(id_propietario)
         );
         """
         with self.conexion_db.obtener_conexion() as conn:
             conn.execute(ddl)
+            columnas = {
+                fila[1]
+                for fila in conn.execute("PRAGMA table_info(MASCOTA)")
+            }
+            if "raza" not in columnas:
+                conn.execute(
+                    "ALTER TABLE MASCOTA ADD COLUMN raza TEXT "
+                    "NOT NULL DEFAULT 'Sin especificar';"
+                )
 
     def insertar(self, mascota: Mascota) -> int:
         if mascota.especie is None or mascota.especie.id_especie is None:
@@ -40,8 +50,8 @@ class MascotaDAO:
             raise exceptions.ReglaNegocioError("La mascota debe tener un propietario válido con ID asignado.")
 
         sql = """
-        INSERT INTO MASCOTA (nombre, fecha_nacimiento, id_especie, id_propietario)
-        VALUES (?, ?, ?, ?);
+        INSERT INTO MASCOTA (nombre, fecha_nacimiento, id_especie, id_propietario, raza)
+        VALUES (?, ?, ?, ?, ?);
         """
         try:
             with self.conexion_db.obtener_conexion() as conn:
@@ -50,7 +60,8 @@ class MascotaDAO:
                     mascota.nombre,
                     date_a_sqlite(mascota.fecha_nacimiento),
                     mascota.especie.id_especie,
-                    mascota.propietario.id_persona
+                    mascota.propietario.id_persona,
+                    mascota.raza,
                 ))
                 nuevo_id = cursor.lastrowid
                 mascota.asignar_id(nuevo_id)
@@ -65,7 +76,7 @@ class MascotaDAO:
     def obtener_por_id(self, id_mascota: int) -> Mascota:
         """Retorna la mascota o lanza EntidadNoEncontradaException si no existe."""
         sql = """
-        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario
+        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario, raza
         FROM MASCOTA
         WHERE id_mascota = ?;
         """
@@ -83,7 +94,7 @@ class MascotaDAO:
         Usa consultas parametrizadas para evitar inyecciones SQL.
         """
         sql = """
-        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario
+        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario, raza
         FROM MASCOTA
         WHERE nombre LIKE ?
         ORDER BY nombre ASC;
@@ -97,7 +108,7 @@ class MascotaDAO:
 
     def listar_todos(self) -> list[Mascota]:
         sql = """
-        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario
+        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario, raza
         FROM MASCOTA
         ORDER BY nombre ASC;
         """
@@ -109,7 +120,7 @@ class MascotaDAO:
 
     def listar_por_propietario(self, id_propietario: int) -> list[Mascota]:
         sql = """
-        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario
+        SELECT id_mascota, nombre, fecha_nacimiento, id_especie, id_propietario, raza
         FROM MASCOTA
         WHERE id_propietario = ?
         ORDER BY nombre ASC;
@@ -131,7 +142,7 @@ class MascotaDAO:
 
         sql = """
         UPDATE MASCOTA
-        SET nombre = ?, fecha_nacimiento = ?, id_especie = ?, id_propietario = ?
+        SET nombre = ?, fecha_nacimiento = ?, id_especie = ?, id_propietario = ?, raza = ?
         WHERE id_mascota = ?;
         """
         with self.conexion_db.obtener_conexion() as conn:
@@ -141,6 +152,7 @@ class MascotaDAO:
                 date_a_sqlite(mascota.fecha_nacimiento),
                 mascota.especie.id_especie,
                 mascota.propietario.id_persona,
+                mascota.raza,
                 mascota.id_mascota
             ))
             if cursor.rowcount == 0:
@@ -170,6 +182,6 @@ class MascotaDAO:
             nombre=fila[1],
             fecha_nacimiento=sqlite_a_date(fila[2]),
             especie=especie,
-            propietario=propietario
+            propietario=propietario,
+            raza=fila[5]
         )
-
