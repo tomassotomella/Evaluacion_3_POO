@@ -23,7 +23,7 @@ from models.especie import Especie
 from models.mascota import Mascota
 from models.propietario import Propietario
 from screens.menu_screen import _obtener_texto_clima
-from screens.propietario_screens import _mostrar_clima_y_alertas
+from screens.propietario_screens import mostrar_clima_y_alertas
 from services.alerta_zoosanitaria_service import AlertaZoosanitariaService
 from services.servicio_clima import ServicioClima
 
@@ -325,7 +325,7 @@ class IntegracionClimaTests(unittest.TestCase):
 
         servicio_clima = ServicioClimaContador()
         with patch("builtins.print"):
-            _mostrar_clima_y_alertas(
+            mostrar_clima_y_alertas(
                 propietario,
                 servicio_clima,
                 AlertaZoosanitariaService(),

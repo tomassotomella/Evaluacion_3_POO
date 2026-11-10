@@ -15,7 +15,7 @@ class ConexionDB:
             conn.commit() # confirma si todo el bloque 'with' termina sin excepciones
         except Exception as error:
             conn.rollback() # revierte si ocurre alguna excepción
-            raise error
+            raise
         finally:
             conn.close() #Se ejecuta SIEMPRE, previniendo Database Locked
 
@@ -34,6 +34,6 @@ class ConexionDBT:
             conn.commit() # confirma si todo el bloque 'with' termina sin excepciones
         except Exception as error:
             conn.rollback() # revierte si ocurre alguna excepción
-            raise error
+            raise
         finally:
             conn.close() #Se ejecuta SIEMPRE, previniendo Database Locked

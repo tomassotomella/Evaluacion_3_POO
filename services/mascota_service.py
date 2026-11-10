@@ -38,16 +38,6 @@ class MascotaService:
     def listar_especies(self) -> list[Especie]:
         return self.especie_dao.listar_todos()  
 
-    def cambiar_nombre_especie(
-        self,
-        id_especie: int | str,
-        nuevo_nombre: str
-    ) -> Especie:
-        especie = self.obtener_especie_por_id(id_especie)
-        especie.actualizar_nombre(nuevo_nombre)
-        self.especie_dao.actualizar(especie)
-        return especie
-
     #Mascotas
     def registrar_mascota(
             self,

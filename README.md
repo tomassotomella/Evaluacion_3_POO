@@ -661,15 +661,18 @@ Administra la tabla `ESPECIALIDAD`:
 - `obtener_por_id`
 - `buscar_por_nombre`
 - `listar_todos`
-- `actualizar`
+- `actualizar_descripcion`
 - `eliminar`
 
-El nombre de la especialidad es único.
+El nombre de la especialidad es único y actúa como identidad: no se modifica
+una vez registrada; si la especialidad cambia se registra una nueva. Solo la
+descripción es editable mediante `actualizar_descripcion`.
 
 #### `EspecieDAO`
 
-Administra la tabla `ESPECIE`, con búsqueda por nombre y operaciones CRUD. El
-nombre de la especie es único.
+Administra la tabla `ESPECIE`, con búsqueda por nombre. El nombre de la
+especie es único y actúa como dato catalogo estático: no se modifica una vez
+registrada.
 
 #### `MedicamentoDAO`
 
@@ -737,8 +740,9 @@ mensualmente, según el alcance actual del proyecto.
 #### `PersonaService`
 
 Coordina propietarios, veterinarios y especialidades. Incluye operaciones para
-registrar, buscar, listar, actualizar contactos, cambiar especialidades y
-eliminar entidades cuando las referencias lo permiten.
+registrar, buscar, listar, actualizar contactos, cambiar especialidades,
+actualizar la descripción de especialidades y eliminar entidades cuando las
+referencias lo permiten.
 
 #### `MascotaService`
 

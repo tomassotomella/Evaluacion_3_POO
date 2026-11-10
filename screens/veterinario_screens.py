@@ -57,16 +57,19 @@ def submenu_especialidades(persona_service) -> None:
         print('''
         1. Registrar Especialidad
         2. Listar Especialidades
-        3. Eliminar Especialidad
+        3. Actualizar Descripción
+        4. Eliminar Especialidad
         0. Volver
         ''')
-        opcion = ui.leer_opcion_menu(3)
+        opcion = ui.leer_opcion_menu(4)
         match opcion:
             case 1:
                 registrar_especialidad(persona_service)
             case 2:
                 listar_especialidades(persona_service)
             case 3:
+                actualizar_descripcion_especialidad(persona_service)
+            case 4:
                 eliminar_especialidad(persona_service)
             case 0:
                 break
@@ -233,6 +236,48 @@ def eliminar_especialidad(persona_service) -> None:
         ui.mostrar_advertencia(
             f"No es posible eliminar la especialidad '{esp.nombre_especialidad}': {error}"
         )
+    finally:
+        ui.pausar()
+
+
+def actualizar_descripcion_especialidad(persona_service) -> None:
+    ui.limpiar_y_encabezado("ACTUALIZAR DESCRIPCIÓN DE ESPECIALIDAD")
+
+    especialidades = persona_service.listar_especialidades()
+    if not especialidades:
+        ui.mostrar_advertencia("No hay especialidades registradas.")
+        ui.pausar()
+        return
+
+    imprimir_tabla_especialidades(especialidades)
+    id_especialidad = ui.leer_entero(
+        "\nIngrese el ID de la especialidad a modificar: ",
+        nombre_campo="ID Especialidad"
+    )
+
+    try:
+        esp = persona_service.obtener_especialidad(id_especialidad)
+        print(f"\nEspecialidad: {esp.nombre_especialidad}")
+        print(f"Descripción actual: {esp.descripcion}")
+
+        nueva_descripcion = ui.leer_texto(
+            "Ingrese la nueva descripción: ",
+            max_longitud=100,
+            nombre_campo="Descripción",
+        )
+        actualizada = persona_service.actualizar_descripcion_especialidad(
+            id_especialidad=esp.id_especialidad,
+            nueva_descripcion=nueva_descripcion,
+        )
+        ui.mostrar_exito(
+            f"Descripción actualizada exitosamente a '{actualizada.descripcion}'."
+        )
+    except (
+        exceptions.EntidadNoEncontradaException,
+        exceptions.ReglaNegocioError,
+        exceptions.EntradaInvalidaException,
+    ) as error:
+        ui.mostrar_error(str(error))
     finally:
         ui.pausar()
 

@@ -84,25 +84,18 @@ class EspecialidadDAO:
             filas = cursor.fetchall()
             return [self._mapear_fila(fila) for fila in filas]
 
-    def actualizar(self, especialidad: Especialidad) -> bool:
-        """Actualiza la especialidad y retorna True si afectó filas."""
-        if especialidad.id_especialidad is None:
-            raise exceptions.ReglaNegocioError("No se puede actualizar una especialidad que no posee ID asignado.")
-
+    def actualizar_descripcion(self, id_especialidad: int, nueva_descripcion: str) -> bool:
+        """Actualiza solo la descripción; el nombre es identidad y no se toca."""
         sql = """
         UPDATE ESPECIALIDAD
-        SET nombre_especialidad = ?, descripcion = ?
+        SET descripcion = ?
         WHERE id_especialidad = ?;
         """
         with self.conexion_db.obtener_conexion() as conn:
             cursor = conn.cursor()
-            cursor.execute(sql, (
-                especialidad.nombre_especialidad,
-                especialidad.descripcion,
-                especialidad.id_especialidad
-            ))
+            cursor.execute(sql, (nueva_descripcion, id_especialidad))
             if cursor.rowcount == 0:
-                raise exceptions.EntidadNoEncontradaException("Especialidad", especialidad.id_especialidad)
+                raise exceptions.EntidadNoEncontradaException("Especialidad", id_especialidad)
             return True
 
     def eliminar(self, id_especialidad: int) -> bool:

@@ -54,17 +54,14 @@ def submenu_especies(mascota_service) -> None:
         print('''
         1. Registrar Especie
         2. Listar Especies
-        3. Cambiar Nombre de Especie
         0. Volver
         ''')
-        opcion = ui.leer_opcion_menu(3)
+        opcion = ui.leer_opcion_menu(2)
         match opcion:
             case 1:
                 registrar_especie(mascota_service)
             case 2:
                 listar_especies(mascota_service)
-            case 3:
-                cambiar_nombre_especie(mascota_service)
             case 0:
                 break
 
@@ -197,36 +194,6 @@ def listar_especies(mascota_service) -> None:
         imprimir_tabla_especies(especies)
     ui.pausar()
 
-
-def cambiar_nombre_especie(mascota_service) -> None:
-    ui.limpiar_y_encabezado("CAMBIAR NOMBRE DE ESPECIE")
-    especies = mascota_service.listar_especies()
-    if not especies:
-        ui.mostrar_advertencia("No hay especies registradas.")
-        ui.pausar()
-        return
-
-    imprimir_tabla_especies(especies)
-    id_especie = ui.leer_entero("\nIngrese el ID de la especie a modificar: ", nombre_campo="ID Especie")
-
-    try:
-        esp_actual = mascota_service.obtener_especie_por_id(id_especie)
-        print(f"\nEspecie seleccionada: {esp_actual.nombre_especie}")
-
-        nuevo_nombre = ui.leer_nombre_alfabetico("Ingrese el nuevo nombre: ", nombre_campo="Especie", maximo=100)
-
-        if ui.desea_confirmar(
-            f"¿Está seguro que quiere cambiar el nombre a '{nuevo_nombre}' de la especie {esp_actual.nombre_especie} ID:{esp_actual.id_especie}?"
-        ):
-            esp_actualizada = mascota_service.cambiar_nombre_especie(id_especie=id_especie, nuevo_nombre=nuevo_nombre)
-            ui.mostrar_exito(f"Especie actualizada a '{esp_actualizada.nombre_especie}'.")
-        else:
-            print("\nOperación cancelada por el usuario.")
-
-    except (exceptions.EntidadNoEncontradaException, exceptions.ReglaNegocioError) as error:
-        ui.mostrar_error(str(error))
-    finally:
-        ui.pausar()
 
 # FUNCIONES  DE APOYO
 

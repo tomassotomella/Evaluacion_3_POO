@@ -84,27 +84,6 @@ class EspecieDAO:
             filas = cursor.fetchall()
             return [self._mapear_fila(fila) for fila in filas]
 
-    def actualizar(self, especie: Especie) -> bool:
-        """Actualiza la especie y retorna True si afectó filas."""
-        if especie.id_especie is None:
-            raise exceptions.ReglaNegocioError("No se puede actualizar una especie que no posee ID asignado.")
-
-        sql = """
-        UPDATE ESPECIE
-        SET nombre_especie = ?, esperanza_vida_max = ?
-        WHERE id_especie = ?;
-        """
-        with self.conexion_db.obtener_conexion() as conn:
-            cursor = conn.cursor()
-            cursor.execute(sql, (
-                especie.nombre_especie,
-                especie.esperanza_vida_max,
-                especie.id_especie
-            ))
-            if cursor.rowcount == 0:
-                raise exceptions.EntidadNoEncontradaException("Especie", especie.id_especie)
-            return True
-
     def eliminar(self, id_especie: int) -> bool:
         """Elimina la especie y retorna True si afectó filas."""
         sql = "DELETE FROM ESPECIE WHERE id_especie = ?;"

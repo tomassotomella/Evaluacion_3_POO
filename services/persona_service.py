@@ -48,6 +48,19 @@ class PersonaService:
         especialidad = self.obtener_especialidad(id_especialidad)
         self.especialidad_dao.eliminar(especialidad.id_especialidad)
 
+    def actualizar_descripcion_especialidad(
+        self,
+        id_especialidad: int | str,
+        nueva_descripcion: str
+    ) -> Especialidad:
+        especialidad = self.obtener_especialidad(id_especialidad)
+        especialidad.actualizar_descripcion(nueva_descripcion)
+        self.especialidad_dao.actualizar_descripcion(
+            especialidad.id_especialidad,
+            especialidad.descripcion
+        )
+        return especialidad
+
     # Propietarios
     def registrar_propietario(
         self,

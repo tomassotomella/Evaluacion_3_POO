@@ -7,10 +7,10 @@ from services.persona_service import PersonaService
 from services.servicio_clima import ServicioClima
 
 
-def main_propietarios(
+def menu_propietarios(
     persona_service: PersonaService,
     servicio_clima: ServicioClima | None = None,
-    alerta_service: AlertaZoosanitariaService | None = None,
+    servicio_alertas: AlertaZoosanitariaService | None = None,
     mascota_service: MascotaService | None = None,
 ) -> None:
     """Menú principal del módulo de gestión de propietarios."""
@@ -26,25 +26,25 @@ def main_propietarios(
         opcion = ui.leer_opcion_menu(4)
         match opcion:
             case 1:
-                subflujo_registrar(persona_service)
+                registrar_propietario(persona_service)
             case 2:
-                subflujo_visualizar(
+                consultar_propietarios(
                     persona_service,
                     servicio_clima,
-                    alerta_service,
+                    servicio_alertas,
                     mascota_service,
                 )
             case 3:
-                subflujo_actualizar(persona_service)
+                actualizar_propietario(persona_service)
             case 4:
-                subflujo_eliminar(persona_service)
+                eliminar_propietario(persona_service)
             case 0:
                 break
 
 
 # SUBFLUJOS PRINCIPALES
 
-def subflujo_registrar(persona_service) -> None:
+def registrar_propietario(persona_service) -> None:
     ui.limpiar_y_encabezado("REGISTRAR PROPIETARIO")
     rut = ui.leer_rut()
     nombre_completo = ui.leer_nombre_alfabetico()
@@ -72,10 +72,10 @@ def subflujo_registrar(persona_service) -> None:
         ui.pausar()
 
 
-def subflujo_visualizar(
+def consultar_propietarios(
     persona_service: PersonaService,
     servicio_clima: ServicioClima | None = None,
-    alerta_service: AlertaZoosanitariaService | None = None,
+    servicio_alertas: AlertaZoosanitariaService | None = None,
     mascota_service: MascotaService | None = None,
 ) -> None:
     while True:
@@ -89,21 +89,21 @@ def subflujo_visualizar(
         opcion = ui.leer_opcion_menu(3)
         match opcion:
             case 1:
-                buscar_por_rut(
+                consultar_propietario_por_rut(
                     persona_service,
                     servicio_clima,
-                    alerta_service,
+                    servicio_alertas,
                     mascota_service,
                 )
             case 2:
-                buscar_por_nombre(persona_service)
+                consultar_propietarios_por_nombre(persona_service)
             case 3:
-                listar_todos(persona_service)
+                listar_propietarios(persona_service)
             case 0:
                 break
 
 
-def subflujo_actualizar(persona_service) -> None:
+def actualizar_propietario(persona_service) -> None:
     while True:
         ui.limpiar_y_encabezado("ACTUALIZAR DATOS DE PROPIETARIO")
         print('''
@@ -124,7 +124,7 @@ def subflujo_actualizar(persona_service) -> None:
                 break
 
 
-def subflujo_eliminar(persona_service) -> None:
+def eliminar_propietario(persona_service) -> None:
     ui.limpiar_y_encabezado("ELIMINAR PROPIETARIO")
     rut = ui.leer_rut("Ingrese RUT del propietario a eliminar: ")
     ui.mostrar_advertencia("Nota: Solo se pueden eliminar propietarios que NO tengan mascotas registradas.")
@@ -144,10 +144,10 @@ def subflujo_eliminar(persona_service) -> None:
 
 # FUNCIONES  DE APOYO
 
-def buscar_por_rut(
+def consultar_propietario_por_rut(
     persona_service: PersonaService,
     servicio_clima: ServicioClima | None = None,
-    alerta_service: AlertaZoosanitariaService | None = None,
+    servicio_alertas: AlertaZoosanitariaService | None = None,
     mascota_service: MascotaService | None = None,
 ) -> None:
     rut = ui.leer_rut("Ingrese RUT a buscar: ")
@@ -159,10 +159,10 @@ def buscar_por_rut(
         print(f"Nombre Completo: {propietario.nombre_completo}")
         print(f"Teléfono:        {propietario.telefono}")
         print(f"Comuna:          {propietario.comuna}")
-        _mostrar_clima_y_alertas(
+        mostrar_clima_y_alertas(
             propietario,
             servicio_clima,
-            alerta_service,
+            servicio_alertas,
             mascota_service,
         )
     except exceptions.EntidadNoEncontradaException as error:
@@ -171,7 +171,7 @@ def buscar_por_rut(
         ui.pausar()
 
 
-def buscar_por_nombre(persona_service) -> None:
+def consultar_propietarios_por_nombre(persona_service) -> None:
     nombre = ui.leer_nombre_alfabetico("Ingrese coincidencia de nombre a buscar: ")
     propietarios = persona_service.buscar_propietarios(nombre)
 
@@ -182,7 +182,7 @@ def buscar_por_nombre(persona_service) -> None:
     ui.pausar()
 
 
-def listar_todos(persona_service) -> None:
+def listar_propietarios(persona_service) -> None:
     propietarios = persona_service.listar_propietarios()
 
     if not propietarios:
@@ -256,10 +256,10 @@ def cambiar_comuna(persona_service) -> None:
         ui.pausar()
 
 
-def _mostrar_clima_y_alertas(
+def mostrar_clima_y_alertas(
     propietario: Propietario,
     servicio_clima: ServicioClima | None,
-    alerta_service: AlertaZoosanitariaService | None,
+    servicio_alertas: AlertaZoosanitariaService | None,
     mascota_service: MascotaService | None,
 ) -> None:
     mascotas = (
@@ -288,9 +288,9 @@ def _mostrar_clima_y_alertas(
         ):
             print("[CLIMA EN VIVO]: No disponible (Offline)")
 
-    if clima is not None and alerta_service:
+    if clima is not None and servicio_alertas:
         for mascota in mascotas:
-            for alerta in alerta_service.evaluar(clima, mascota):
+            for alerta in servicio_alertas.evaluar(clima, mascota):
                 print(f"[ALERTA ZOOSANITARIA - {alerta.tipo}]: {alerta.mensaje}")
                 print(f"Recomendación: {alerta.recomendacion}")
 

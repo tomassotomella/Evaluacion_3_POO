@@ -47,6 +47,3 @@ class Especie:
         if esperanza > 200:
             raise exceptions.ReglaNegocioError('La esperanza de vida máxima no puede superar los 200 años.')
         self._esperanza_vida_maxima = esperanza
-
-    def actualizar_nombre(self, nuevo_nombre: str) -> None:
-        self.nombre_especie = nuevo_nombre

@@ -26,7 +26,10 @@ def _obtener_texto_mercado(economia_service) -> str:
         divisa = economia_service.obtener_dolar_actual()
         valor_formateado = ui.formatear_decimal(divisa.valor)
         return f"[MERCADO CAMBIARIO]: Dólar Observado: ${valor_formateado} CLP (Fuente: {economia_service.SERVICIO_NOMBRE})"
-    except Exception:
+    except (
+        exceptions.ConfiguracionException,
+        exceptions.ServicioExternoException,
+    ):
         return "[MERCADO CAMBIARIO]: Dólar Observado: No disponible (Offline)"
 
 
@@ -49,7 +52,7 @@ def _obtener_texto_clima(
         return "[CLIMA EN VIVO]: No disponible (Offline)"
 
 
-def main_menu(
+def menu_principal(
     persona_service: PersonaService,
     mascota_service: MascotaService,
     consulta_service: ConsultaService,
@@ -57,7 +60,7 @@ def main_menu(
     economia_service=None,
     feriado_service=None,
     servicio_clima: ServicioClima | None = None,
-    alerta_service: AlertaZoosanitariaService | None = None,
+    servicio_alertas: AlertaZoosanitariaService | None = None,
 ) -> None:
     """Menú principal de la aplicación VetCare."""
     while True:
@@ -90,10 +93,10 @@ def main_menu(
         opcion = ui.leer_opcion_menu(5)
         match opcion:
             case 1:
-                propietario_screens.main_propietarios(
+                propietario_screens.menu_propietarios(
                     persona_service,
                     servicio_clima=servicio_clima,
-                    alerta_service=alerta_service,
+                    servicio_alertas=servicio_alertas,
                     mascota_service=mascota_service,
                 )
             case 2:

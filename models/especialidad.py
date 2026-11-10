@@ -59,9 +59,6 @@ class Especialidad:
         descripcion_valida = ValidadorEntradas.validar_longitud(texto, max = 100, nombre = 'descripción')
         self._descripcion = descripcion_valida
 
-    def actualizar_nombre(self, nuevo_nombre: str) -> None:
-        self.nombre_especialidad = nuevo_nombre
-
     def actualizar_descripcion(self, nueva_descripcion: str) -> None:
         self.descripcion = nueva_descripcion
 

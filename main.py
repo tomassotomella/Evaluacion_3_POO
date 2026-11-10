@@ -19,7 +19,7 @@ from dao.feriado_dao import FeriadoDAO
 from services.cliente_resiliente import ClienteHTTPResiliente
 from services.servicio_clima import ServicioClima
 from services.alerta_zoosanitaria_service import AlertaZoosanitariaService
-from screens.menu_screen import main_menu
+from screens.menu_screen import menu_principal
 
 
 def main() -> None:
@@ -53,7 +53,7 @@ def main() -> None:
         cliente_http=cliente_http,
     )
     servicio_clima = ServicioClima(cliente_http)
-    alerta_service = AlertaZoosanitariaService()
+    servicio_alertas = AlertaZoosanitariaService()
     consulta_service = ConsultaService(
         consulta_dao,
         receta_dao,
@@ -66,7 +66,7 @@ def main() -> None:
     farmacia_service = FarmaciaService(medicamento_dao, consulta_service, economia_service)
 
     try:
-        main_menu(
+        menu_principal(
             persona_service,
             mascota_service,
             consulta_service,
@@ -74,7 +74,7 @@ def main() -> None:
             economia_service,
             feriado_service,
             servicio_clima,
-            alerta_service,
+            servicio_alertas,
         )
     except KeyboardInterrupt:
         print("\n\nSesión interrumpida por el usuario. ¡Hasta pronto!")

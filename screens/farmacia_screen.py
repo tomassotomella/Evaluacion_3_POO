@@ -138,7 +138,10 @@ def mostrar_detalle_medicamento(medicamento, farmacia_service=None) -> None:
             tasa_str = ui.formatear_decimal(dolar.valor)
             print(f"[INFO]: Tipo de cambio aplicado: 1 USD = ${tasa_str} CLP.")
             print("-" * ancho)
-        except Exception:
+        except (
+            exceptions.ConfiguracionException,
+            exceptions.ServicioExternoException,
+        ):
             pass
     if medicamento.es_stock_critico():
         ui.mostrar_advertencia("El medicamento se encuentra con stock crítico.")
@@ -272,7 +275,10 @@ def mostrar_comprobante_despacho(total_clp: int, economia_service) -> None:
             tasa_str = ui.formatear_decimal(divisa.valor)
             print(f"EQUIVALENTE USD: {ui.formatear_usd(total_usd)}")
             print(f"[INFO]: Tipo de cambio aplicado: 1 USD = ${tasa_str} CLP.")
-        except Exception:
+        except (
+            exceptions.ConfiguracionException,
+            exceptions.ServicioExternoException,
+        ):
             print("EQUIVALENTE USD: No disponible (Offline)")
     print("-" * ancho)
 
