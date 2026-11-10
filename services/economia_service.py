@@ -1,12 +1,10 @@
-import requests
 from datetime import date, datetime, timedelta
 from dao.divisa_dao import DivisaDAO
 from exceptions import exceptions
+from services.cliente_resiliente import ClienteResiliente
 from utilities.ValidadorEntradas import ValidadorEntradas
 from exceptions.exceptions import (
     ServicioExternoException,
-    ConexionTimeoutException,
-    ErrorRespuestaHttpException,
     FormatoRespuestaInvalidoException
 )
 from models.divisa import Divisa
@@ -15,84 +13,81 @@ from models.divisa import Divisa
 class EconomiaService:
     SERVICIO_NOMBRE = "DolarAPI"
     URL_BASE = "https://cl.dolarapi.com/v1/cotizaciones"
-    TIMEOUT = 10
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
-    def __init__(self, divisa_dao: DivisaDAO):
+    def __init__(
+        self,
+        divisa_dao: DivisaDAO,
+        cliente_http: ClienteResiliente | None = None,
+    ):
         self.divisa_dao = divisa_dao
-        # Caché
+        self.cliente_http = cliente_http or ClienteResiliente()
         self._cache: dict[str, Divisa] = {}
 
 
     @classmethod
     def obtener_indicador(cls, tipo_indicador: str) -> Divisa:
+        """Mantiene el acceso de clase existente usando un cliente predeterminado."""
+        return cls._consultar_indicador(tipo_indicador, ClienteResiliente())
+
+    def _obtener_indicador(self, tipo_indicador: str) -> Divisa:
+        return self._consultar_indicador(tipo_indicador, self.cliente_http)
+
+    @classmethod
+    def _consultar_indicador(
+        cls,
+        tipo_indicador: str,
+        cliente_http: ClienteResiliente,
+    ) -> Divisa:
         indicador_seguro = ValidadorEntradas.sanitizar_codigo_indicador(tipo_indicador)
         endpoint = f"{cls.URL_BASE}/{indicador_seguro}"
+        respuesta = cliente_http.ejecutar_get(
+            endpoint,
+            servicio=cls.SERVICIO_NOMBRE,
+            cabeceras=cls.HEADERS,
+        )
 
         try:
-            respuesta = requests.get(endpoint, headers=cls.HEADERS, timeout=cls.TIMEOUT)
+            payload = respuesta.json()
+        except ValueError as error_json:
+            raise FormatoRespuestaInvalidoException(
+                servicio=cls.SERVICIO_NOMBRE,
+                motivo=f"La respuesta no es un JSON válido: {error_json}"
+            ) from error_json
 
-            if respuesta.status_code != 200:
-                raise ErrorRespuestaHttpException(
-                    servicio=cls.SERVICIO_NOMBRE,
-                    status_code=respuesta.status_code,
-                    detalle=respuesta.text[:200]
-                )
+        if not isinstance(payload, dict):
+            raise FormatoRespuestaInvalidoException(
+                servicio=cls.SERVICIO_NOMBRE,
+                motivo="El cuerpo de la respuesta no es un objeto JSON estructurado."
+            )
 
-            try:
-                payload = respuesta.json()
-            except ValueError as error_json:
-                raise FormatoRespuestaInvalidoException(
-                    servicio=cls.SERVICIO_NOMBRE,
-                    motivo=f"La respuesta no es un JSON válido: {error_json}"
-                ) from error_json
+        codigo = payload.get("moneda")
+        nombre = payload.get("nombre")
+        valor = payload.get("venta")
+        fecha_raw = payload.get("fechaActualizacion")
 
-            if not isinstance(payload, dict):
-                raise FormatoRespuestaInvalidoException(
-                    servicio=cls.SERVICIO_NOMBRE,
-                    motivo="El cuerpo de la respuesta no es un objeto JSON estructurado."
-                )
+        if valor is None:
+            raise FormatoRespuestaInvalidoException(
+                servicio=cls.SERVICIO_NOMBRE,
+                motivo="No se encontró el valor de cotización ('venta') en la respuesta."
+            )
 
-            codigo = payload.get("moneda") 
-            nombre = payload.get("nombre") 
-            valor = payload.get("venta")
-            fecha_raw = payload.get("fechaActualizacion")
+        if not fecha_raw:
+            raise FormatoRespuestaInvalidoException(
+                servicio=cls.SERVICIO_NOMBRE,
+                motivo="No se encontró la fecha de actualización en la respuesta."
+            )
 
-            if valor is None:
-                raise FormatoRespuestaInvalidoException(
-                    servicio=cls.SERVICIO_NOMBRE,
-                    motivo="No se encontró el valor de cotización ('venta') en la respuesta."
-                )
-
-            if not fecha_raw:
-                raise FormatoRespuestaInvalidoException(
-                    servicio=cls.SERVICIO_NOMBRE,
-                    motivo="No se encontró la fecha de actualización en la respuesta."
-                )
-
-            fecha_actualizacion = datetime.fromisoformat(payload['fechaActualizacion']).date()
-
+        try:
+            fecha_actualizacion = datetime.fromisoformat(fecha_raw).date()
             return Divisa(
                 codigo=codigo,
                 nombre=nombre,
                 valor=float(valor),
                 fecha_actualizacion=fecha_actualizacion
             )
-
-        except requests.exceptions.Timeout as error_timeout:
-            raise ConexionTimeoutException(
-                servicio=cls.SERVICIO_NOMBRE,
-                timeout_segundos=cls.TIMEOUT
-            ) from error_timeout
-
-        except requests.exceptions.RequestException as error_red:
-            raise ServicioExternoException(
-                servicio=cls.SERVICIO_NOMBRE,
-                mensaje=f"Fallo en la conexión de red: {error_red}"
-            ) from error_red
-
         except (ValueError, TypeError) as error_datos:
             raise FormatoRespuestaInvalidoException(
                 servicio=cls.SERVICIO_NOMBRE,
@@ -153,7 +148,7 @@ class EconomiaService:
 
         # 3. CONSUMIR SERVICIO EXTERNO (API HTTP)
         try:
-            divisa_fresca = self.obtener_indicador(codigo_normalizado)
+            divisa_fresca = self._obtener_indicador(codigo_normalizado)
             self.divisa_dao.actualizar(divisa_fresca)
             self._cache[codigo_normalizado] = divisa_fresca #guardar en cache
             return divisa_fresca

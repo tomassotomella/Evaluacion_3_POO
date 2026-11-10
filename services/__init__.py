@@ -4,6 +4,7 @@ from services.consulta_service import ConsultaService
 from services.farmacia_service import FarmaciaService
 from services.economia_service import EconomiaService
 from services.feriado_service import FeriadoService
+from services.cliente_resiliente import ClienteHTTPResiliente, ClienteResiliente
 
 __all__ = [
     'PersonaService',
@@ -11,5 +12,7 @@ __all__ = [
     'ConsultaService',
     'FarmaciaService',
     'EconomiaService',
-    'FeriadoService'
+    'FeriadoService',
+    'ClienteHTTPResiliente',
+    'ClienteResiliente'
 ]

@@ -947,8 +947,8 @@ Se guardaron 3 objetos por cada entidad.
 =================================================================
 ```
 
-**Resultado Obtenido:** la salida se muestra directamente en la terminal al
-ejecutar el comando anterior.
+**Resultado Obtenido:**
+![Resultado de la prueba de persistencia SQL](docs/evidencias/resultado_persistencia_sql.png)
 
 #### 2. SQL a dominio e hidratación
 
@@ -1055,8 +1055,9 @@ Resultado ID inexistente (debe ser None): None
 ==================================================
 ```
 
-**Resultado Obtenido:** la salida se muestra directamente en la terminal al
-ejecutar el comando anterior.
+**Resultado Obtenido:**
+![Resultado de la lectura SQL a dominio](docs/evidencias/resultado_sql_a_dominio.png)
+![Resultado de la hidratación de relaciones](docs/evidencias/resultado_hidratacion_relaciones.png)
 
 #### 3. Resiliencia y excepciones
 
@@ -1117,8 +1118,8 @@ SUITE DE EXCEPCIONES — TODAS LAS ENTIDADES
 =================================================================
 ```
 
-**Resultado Obtenido:** la salida se muestra directamente en la terminal al
-ejecutar el comando anterior.
+**Resultado Obtenido:**
+![Resultado de las pruebas de excepciones e integridad](docs/evidencias/resultado_excepciones_integridad.png)
 
 #### 4. Auditoría contra SQL Injection
 
@@ -1179,8 +1180,8 @@ TODOS LOS DAO FUERON CERTIFICADOS CONTRA SQL INJECTION
 =================================================================
 ```
 
-**Resultado Obtenido:** la salida se muestra directamente en la terminal al
-ejecutar el comando anterior.
+**Resultado Obtenido:**
+![Resultado de la auditoría contra SQL injection](docs/evidencias/resultado_auditoria_sql_injection.png)
 
 ### Forma de ejecución de los scripts
 
