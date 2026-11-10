@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
+from config.configuracion import Configuracion
 from dao.feriado_dao import FeriadoDAO
 from exceptions import exceptions
 from models.feriado import Feriado
@@ -17,7 +18,7 @@ class FeriadoService:
     """Consulta feriados, mantiene su caché mensual y aplica reglas de calendario."""
 
     SERVICIO_NOMBRE = "BoostrHolidays"
-    URL_BASE = "https://api.boostr.cl/holidays.json"
+    URL_BASE = Configuracion.URL_FERIADOS
     HEADERS = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

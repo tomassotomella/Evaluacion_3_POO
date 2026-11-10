@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from dotenv import dotenv_values
 
+from config.configuracion import Configuracion
 from exceptions.exceptions import (
     ConfiguracionException,
     ConexionTimeoutException,
@@ -22,7 +23,7 @@ from utilities.ValidadorEntradas import ValidadorEntradas
 
 class ServicioClima:
     SERVICIO_NOMBRE = "WeatherAPI"
-    URL_ACTUAL = "https://api.weatherapi.com/v1/current.json"
+    URL_ACTUAL = f"{Configuracion.URL_BASE_CLIMA}/current.json"
     ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
 
     def __init__(
@@ -32,7 +33,10 @@ class ServicioClima:
         self.cliente_http = cliente_http
         self._api_key = dotenv_values(self.ENV_PATH).get("WEATHER_API_KEY")
 
-    def obtener_clima(self, comuna: str = "Los Ángeles, Chile") -> Clima:
+    def obtener_clima(
+        self,
+        comuna: str = Configuracion.CIUDAD_DEFECTO_CLINICA,
+    ) -> Clima:
         api_key = self._obtener_api_key()
         comuna_limpia = ValidadorEntradas.validar_longitud(
             comuna,

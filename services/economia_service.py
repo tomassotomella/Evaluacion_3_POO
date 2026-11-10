@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from config.configuracion import Configuracion
 from dao.divisa_dao import DivisaDAO
 from exceptions import exceptions
 from services.cliente_resiliente import ClienteResiliente
@@ -12,7 +13,7 @@ from models.divisa import Divisa
 
 class EconomiaService:
     SERVICIO_NOMBRE = "DolarAPI"
-    URL_BASE = "https://cl.dolarapi.com/v1/cotizaciones"
+    URL_BASE = Configuracion.URL_BASE_DOLAR
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }

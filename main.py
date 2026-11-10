@@ -1,3 +1,4 @@
+from config.configuracion import Configuracion
 from database.conexion import ConexionDB
 from dao.propietario_dao import PropietarioDAO
 from dao.veterinario_dao import VeterinarioDAO
@@ -40,7 +41,9 @@ def main() -> None:
     # Services (respetando sus dependencias)
     persona_service = PersonaService(propietario_dao, veterinario_dao, especialidad_dao)
     mascota_service = MascotaService(mascota_dao, especie_dao, persona_service)
-    cliente_http = ClienteHTTPResiliente()
+    cliente_http = ClienteHTTPResiliente(
+        timeout=Configuracion.TIMEOUT_SEGUNDOS,
+    )
     economia_service = EconomiaService(
         divisa_dao,
         cliente_http=cliente_http,

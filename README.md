@@ -390,11 +390,18 @@ Edita `.env` para que contenga:
 
 ```text
 WEATHER_API_KEY=tu_clave_de_weatherapi
+WEATHER_BASE_URL=https://api.weatherapi.com/v1
+DOLAR_BASE_URL=https://cl.dolarapi.com/v1/cotizaciones
+FERIADOS_URL=https://api.boostr.cl/holidays.json
+TIMEOUT_SEGUNDOS=10
+CIUDAD_DEFECTO_CLINICA=Los Ángeles, Chile
 ```
 
 El archivo `.env` está excluido de Git. No compartas ni confirmes ese archivo;
-`.env.example` solo contiene el nombre de la variable. Si la clave falta o la
-API no está disponible, VetCare sigue funcionando y muestra el clima como
+`.env.example` contiene la clave como marcador y los parámetros configurables.
+Las URLs públicas de las APIs se mantienen en `config/configuracion.py`; la
+clave de WeatherAPI se lee exclusivamente desde `.env`. Si la clave falta o
+la API no está disponible, VetCare sigue funcionando y muestra el clima como
 offline.
 
 ### Biblioteca estándar utilizada

@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import requests
 
+from config.configuracion import Configuracion
 from exceptions.exceptions import (
     ConexionTimeoutException,
     ErrorRespuestaHttpException,
@@ -15,7 +16,7 @@ class ClienteHTTPResiliente:
 
     def __init__(
         self,
-        timeout: int = 10,
+        timeout: int = Configuracion.TIMEOUT_SEGUNDOS,
         max_reintentos: int = 3,
     ):
         if timeout <= 0:
