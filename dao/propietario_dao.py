@@ -14,16 +14,26 @@ class PropietarioDAO:
             id_propietario INTEGER PRIMARY KEY AUTOINCREMENT,
             rut TEXT UNIQUE NOT NULL,
             nombre_completo TEXT NOT NULL,
-            telefono TEXT NOT NULL
+            telefono TEXT NOT NULL,
+            comuna TEXT NOT NULL DEFAULT 'Los Ángeles, Chile'
         );
         """
         with self.conexion_db.obtener_conexion() as conn:
             conn.execute(ddl)
+            columnas = {
+                fila[1]
+                for fila in conn.execute("PRAGMA table_info(PROPIETARIO)")
+            }
+            if "comuna" not in columnas:
+                conn.execute(
+                    "ALTER TABLE PROPIETARIO ADD COLUMN comuna TEXT "
+                    "NOT NULL DEFAULT 'Los Ángeles, Chile';"
+                )
 
     def insertar(self, propietario: Propietario) -> int:
         sql = """
-        INSERT INTO PROPIETARIO (rut, nombre_completo, telefono)
-        VALUES (?, ?, ?);
+        INSERT INTO PROPIETARIO (rut, nombre_completo, telefono, comuna)
+        VALUES (?, ?, ?, ?);
         """
         try:
             with self.conexion_db.obtener_conexion() as conn:
@@ -31,7 +41,8 @@ class PropietarioDAO:
                 cursor.execute(sql, (
                     propietario.rut,
                     propietario.nombre_completo,
-                    propietario.telefono
+                    propietario.telefono,
+                    propietario.comuna,
                 ))
                 nuevo_id = cursor.lastrowid
                 propietario.asignar_id(nuevo_id)
@@ -44,7 +55,7 @@ class PropietarioDAO:
     def obtener_por_id(self, id_propietario: int) -> Propietario:
         """Retorna el propietario o lanza EntidadNoEncontradaException si no existe."""
         sql = """
-        SELECT id_propietario, rut, nombre_completo, telefono
+        SELECT id_propietario, rut, nombre_completo, telefono, comuna
         FROM PROPIETARIO
         WHERE id_propietario = ?;
         """
@@ -59,7 +70,7 @@ class PropietarioDAO:
     def obtener_por_rut(self, rut: str) -> Propietario:
         """Retorna el propietario o lanza EntidadNoEncontradaException si no existe."""
         sql = """
-        SELECT id_propietario, rut, nombre_completo, telefono
+        SELECT id_propietario, rut, nombre_completo, telefono, comuna
         FROM PROPIETARIO
         WHERE rut = ?;
         """
@@ -77,7 +88,7 @@ class PropietarioDAO:
         Usa consultas parametrizadas para evitar inyecciones SQL.
         """
         sql = """
-        SELECT id_propietario, rut, nombre_completo, telefono
+        SELECT id_propietario, rut, nombre_completo, telefono, comuna
         FROM PROPIETARIO
         WHERE nombre_completo LIKE ?
         ORDER BY nombre_completo ASC;
@@ -91,7 +102,7 @@ class PropietarioDAO:
 
     def listar_todos(self) -> list[Propietario]:
         sql = """
-        SELECT id_propietario, rut, nombre_completo, telefono
+        SELECT id_propietario, rut, nombre_completo, telefono, comuna
         FROM PROPIETARIO
         ORDER BY nombre_completo ASC;
         """
@@ -108,7 +119,7 @@ class PropietarioDAO:
 
         sql = """
         UPDATE PROPIETARIO
-        SET rut = ?, nombre_completo = ?, telefono = ?
+        SET rut = ?, nombre_completo = ?, telefono = ?, comuna = ?
         WHERE id_propietario = ?;
         """
         with self.conexion_db.obtener_conexion() as conn:
@@ -117,6 +128,7 @@ class PropietarioDAO:
                 propietario.rut,
                 propietario.nombre_completo,
                 propietario.telefono,
+                propietario.comuna,
                 propietario.id_persona
             ))
             if cursor.rowcount == 0:
@@ -143,6 +155,6 @@ class PropietarioDAO:
             id_propietario=fila[0],
             rut=fila[1],
             nombre_completo=fila[2],
-            telefono=fila[3]
+            telefono=fila[3],
+            comuna=fila[4]
         )
-

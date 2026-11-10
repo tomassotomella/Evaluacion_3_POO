@@ -10,6 +10,12 @@ from screens import (
     farmacia_screen,
     urgencia_screen,
 )
+from services.alerta_zoosanitaria_service import AlertaZoosanitariaService
+from services.consulta_service import ConsultaService
+from services.farmacia_service import FarmaciaService
+from services.mascota_service import MascotaService
+from services.persona_service import PersonaService
+from services.servicio_clima import ServicioClima
 
 
 def _obtener_texto_mercado(economia_service) -> str:
@@ -24,13 +30,34 @@ def _obtener_texto_mercado(economia_service) -> str:
         return "[MERCADO CAMBIARIO]: Dólar Observado: No disponible (Offline)"
 
 
+def _obtener_texto_clima(
+    servicio_clima: ServicioClima | None,
+    comuna: str = "Los Ángeles, Chile",
+) -> str:
+    if not servicio_clima:
+        return "[CLIMA EN VIVO]: No disponible (Offline)"
+    try:
+        clima = servicio_clima.obtener_clima(comuna)
+        return (
+            f"[CLIMA EN VIVO]: {clima.temperatura_c:.1f} °C, "
+            f"{clima.condicion}"
+        )
+    except (
+        exceptions.ConfiguracionException,
+        exceptions.ServicioExternoException,
+    ):
+        return "[CLIMA EN VIVO]: No disponible (Offline)"
+
+
 def main_menu(
-    persona_service,
-    mascota_service,
-    consulta_service,
-    farmacia_service,
+    persona_service: PersonaService,
+    mascota_service: MascotaService,
+    consulta_service: ConsultaService,
+    farmacia_service: FarmaciaService,
     economia_service=None,
     feriado_service=None,
+    servicio_clima: ServicioClima | None = None,
+    alerta_service: AlertaZoosanitariaService | None = None,
 ) -> None:
     """Menú principal de la aplicación VetCare."""
     while True:
@@ -39,6 +66,8 @@ def main_menu(
         print("=" * ancho)
         print("VETCARE - CLÍNICA VETERINARIA".center(ancho))
         print("=" * ancho)
+        print("[SUCURSAL VETCARE]: Los Ángeles, Chile")
+        print(_obtener_texto_clima(servicio_clima))
         print(_obtener_texto_mercado(economia_service))
         if feriado_service:
             try:
@@ -61,7 +90,12 @@ def main_menu(
         opcion = ui.leer_opcion_menu(5)
         match opcion:
             case 1:
-                propietario_screens.main_propietarios(persona_service)
+                propietario_screens.main_propietarios(
+                    persona_service,
+                    servicio_clima=servicio_clima,
+                    alerta_service=alerta_service,
+                    mascota_service=mascota_service,
+                )
             case 2:
                 veterinario_screens.main_veterinarios(persona_service)
             case 3:

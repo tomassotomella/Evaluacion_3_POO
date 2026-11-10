@@ -16,7 +16,8 @@ class Mascota:
         fecha_nacimiento: date,
         especie: Especie,
         propietario: Propietario,
-        id_mascota: int | None = None
+        id_mascota: int | None = None,
+        raza: str = "Sin especificar",
     ):
         self._id_mascota = ValidadorEntradas.validar_id(id_mascota, "mascota")
         #Inicialización de atributos privados
@@ -25,12 +26,14 @@ class Mascota:
         self._fecha_nacimiento = None
         self._propietario = None
         self._consultas = []
+        self._raza = ""
 
         # Asignación de valores a los atributos privados con validación
         self.nombre = nombre
         self.especie = especie
         self.fecha_nacimiento = fecha_nacimiento
         self.propietario = propietario
+        self.raza = raza
     
     @property
     def id_mascota(self) -> int | None:
@@ -51,6 +54,18 @@ class Mascota:
             nombre='Nombre de mascota'
         )
         self._nombre = nombre_limpio
+
+    @property
+    def raza(self) -> str:
+        return self._raza
+
+    @raza.setter
+    def raza(self, valor: str) -> None:
+        self._raza = ValidadorEntradas.validar_longitud(
+            valor,
+            max=100,
+            nombre="Raza",
+        )
 
     @property
     def fecha_nacimiento(self) -> date:

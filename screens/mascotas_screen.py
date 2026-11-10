@@ -82,6 +82,11 @@ def registrar_mascota(mascota_service) -> None:
     rut_propietario = ui.leer_rut("Ingrese RUT del propietario responsable: ")
     nombre = ui.leer_nombre_alfabetico("Ingrese nombre de la mascota: ", nombre_campo="Nombre Mascota", maximo=100)
     fecha_nac = ui.leer_fecha("Ingrese fecha de nacimiento (YYYY-MM-DD): ", nombre_campo="Fecha Nacimiento")
+    raza = ui.leer_texto(
+        "Ingrese raza (o 'Sin especificar'): ",
+        max_longitud=100,
+        nombre_campo="Raza",
+    )
 
     imprimir_tabla_especies(especies)
     id_especie = ui.leer_entero("Seleccione el ID de la especie: ", nombre_campo="ID Especie")
@@ -91,7 +96,8 @@ def registrar_mascota(mascota_service) -> None:
             nombre=nombre,
             fecha_nacimiento=fecha_nac,
             id_especie=id_especie,
-            rut_propietario=rut_propietario
+            rut_propietario=rut_propietario,
+            raza=raza,
         )
         ui.mostrar_exito(f"Mascota '{mascota.nombre}' registrada exitosamente.")
     except (exceptions.EntidadNoEncontradaException, exceptions.ReglaNegocioError) as error:
@@ -127,14 +133,17 @@ def actualizar_mascota(mascota_service) -> None:
         print('''
         1. Cambiar Nombre
         2. Cambiar Propietario
+        3. Cambiar Raza
         0. Volver
         ''')
-        opcion = ui.leer_opcion_menu(2)
+        opcion = ui.leer_opcion_menu(3)
         match opcion:
             case 1:
                 cambiar_nombre_mascota(mascota_service)
             case 2:
                 cambiar_propietario_mascota(mascota_service)
+            case 3:
+                cambiar_raza_mascota(mascota_service)
             case 0:
                 break
 
@@ -299,14 +308,42 @@ def cambiar_propietario_mascota(mascota_service) -> None:
         ui.pausar()
 
 
+def cambiar_raza_mascota(mascota_service) -> None:
+    id_mascota = ui.leer_entero("Ingrese ID de la mascota: ", nombre_campo="ID Mascota")
+    try:
+        mascota = mascota_service.obtener_mascota_por_id(id_mascota)
+        print(f"\nMascota: {mascota.nombre}")
+        print(f"Raza actual: {mascota.raza}")
+        nueva_raza = ui.leer_texto(
+            "Ingrese la nueva raza: ",
+            max_longitud=100,
+            nombre_campo="Raza",
+        )
+        actualizada = mascota_service.cambiar_raza(
+            id_mascota=id_mascota,
+            nueva_raza=nueva_raza,
+        )
+        ui.mostrar_exito(
+            f"Raza actualizada exitosamente a '{actualizada.raza}'."
+        )
+    except (
+        exceptions.EntidadNoEncontradaException,
+        exceptions.ReglaNegocioError,
+        exceptions.EntradaInvalidaException,
+    ) as error:
+        ui.mostrar_error(str(error))
+    finally:
+        ui.pausar()
+
+
 def imprimir_tabla_mascotas(mascotas: list) -> None:
-    print(f"\n{'ID':<6} | {'NOMBRE':<20} | {'FECHA NAC.':<12} | {'ESPECIE':<15} | {'PROPIETARIO':<25}")
-    print("-" * 85)
+    print(f"\n{'ID':<6} | {'NOMBRE':<20} | {'RAZA':<18} | {'FECHA NAC.':<12} | {'ESPECIE':<15} | {'PROPIETARIO':<25}")
+    print("-" * 110)
     for m in mascotas:
         fecha_str = str(m.fecha_nacimiento)
         nombre_especie = m.especie.nombre_especie if m.especie else "N/A"
         nombre_prop = m.propietario.nombre_completo if m.propietario else "N/A"
-        print(f"{m.id_mascota:<6} | {m.nombre:<20} | {fecha_str:<12} | {nombre_especie:<15} | {nombre_prop:<25}")
+        print(f"{m.id_mascota:<6} | {m.nombre:<20} | {m.raza:<18} | {fecha_str:<12} | {nombre_especie:<15} | {nombre_prop:<25}")
 
 
 def imprimir_tabla_especies(especies: list) -> None:

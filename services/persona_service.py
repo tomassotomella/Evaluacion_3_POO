@@ -53,12 +53,14 @@ class PersonaService:
         self,
         rut: str,
         nombre_completo: str,
-        telefono: str
+        telefono: str,
+        comuna: str = "Los Ángeles, Chile",
     ) -> Propietario:
         propietario = Propietario(
             rut=rut,
             nombre_completo=nombre_completo,
-            telefono=telefono
+            telefono=telefono,
+            comuna=comuna,
         )
         self.propietario_dao.insertar(propietario)
         return propietario
@@ -100,6 +102,16 @@ class PersonaService:
     ) -> Propietario:
         propietario = self.obtener_propietario_por_rut(rut)
         propietario.actualizar_contacto(nuevo_telefono)
+        self.propietario_dao.actualizar(propietario)
+        return propietario
+
+    def cambiar_comuna_propietario(
+        self,
+        rut: str,
+        nueva_comuna: str
+    ) -> Propietario:
+        propietario = self.obtener_propietario_por_rut(rut)
+        propietario.actualizar_comuna(nueva_comuna)
         self.propietario_dao.actualizar(propietario)
         return propietario
 
