@@ -40,9 +40,15 @@ def main() -> None:
     # Services (respetando sus dependencias)
     persona_service = PersonaService(propietario_dao, veterinario_dao, especialidad_dao)
     mascota_service = MascotaService(mascota_dao, especie_dao, persona_service)
-    economia_service = EconomiaService(divisa_dao)
-    feriado_service = FeriadoService(feriado_dao)
     cliente_http = ClienteHTTPResiliente()
+    economia_service = EconomiaService(
+        divisa_dao,
+        cliente_http=cliente_http,
+    )
+    feriado_service = FeriadoService(
+        feriado_dao,
+        cliente_http=cliente_http,
+    )
     servicio_clima = ServicioClima(cliente_http)
     alerta_service = AlertaZoosanitariaService()
     consulta_service = ConsultaService(
