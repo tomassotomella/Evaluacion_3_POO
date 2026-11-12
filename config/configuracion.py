@@ -16,7 +16,6 @@ class Configuracion:
     URL_BASE_DOLAR: str
     URL_FERIADOS: str
     TIMEOUT_SEGUNDOS = 10
-    CIUDAD_DEFECTO_CLINICA = "Los Ángeles, Chile"
 
     @classmethod
     def cargar(cls) -> None:
@@ -32,10 +31,7 @@ class Configuracion:
                 nombre="TIMEOUT_SEGUNDOS",
                 minimo=1,
             )
-        cls.CIUDAD_DEFECTO_CLINICA = (
-            os.getenv("CIUDAD_DEFECTO_CLINICA")
-            or cls.CIUDAD_DEFECTO_CLINICA
-        ).strip()
+        cls.CIUDAD_DEFECTO_CLINICA = os.getenv("CIUDAD_DEFECTO_CLINICA")
 
     @staticmethod
     def _obtener_requerida(nombre: str) -> str:
