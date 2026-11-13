@@ -7,22 +7,27 @@ from config.configuracion import Configuracion
 from exceptions.exceptions import (
     ConexionTimeoutException,
     ErrorRespuestaHttpException,
+    EntradaInvalidaException,
     ServicioExternoException,
 )
 
 
 class ClienteHTTPResiliente:
-    """Ejecuta peticiones GET con timeout y reintentos de fallos transitorios."""
-
     def __init__(
         self,
         timeout: int = Configuracion.TIMEOUT_SEGUNDOS,
         max_reintentos: int = 3,
     ):
         if timeout <= 0:
-            raise ValueError("El timeout debe ser positivo.")
+            raise EntradaInvalidaException(
+                campo="timeout",
+                motivo="debe ser positivo.",
+            )
         if max_reintentos < 0:
-            raise ValueError("Los reintentos no pueden ser negativos.")
+            raise EntradaInvalidaException(
+                campo="max_reintentos",
+                motivo="no puede ser negativo.",
+            )
         self.timeout = timeout
         self.max_reintentos = max_reintentos
 
@@ -34,9 +39,11 @@ class ClienteHTTPResiliente:
         *,
         servicio: str = "Servicio externo",
     ) -> requests.Response:
-        """Obtiene una respuesta o traduce el fallo a una excepción del proyecto."""
         if self.max_reintentos == 0:
-            raise ValueError("Debe permitirse al menos un intento.")
+            raise EntradaInvalidaException(
+                campo="max_reintentos",
+                motivo="debe permitir al menos un intento.",
+            )
 
         for intento in range(1, self.max_reintentos + 1):
             try:

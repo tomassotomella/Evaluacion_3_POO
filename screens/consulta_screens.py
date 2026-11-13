@@ -4,7 +4,7 @@ from models.consulta import EstadosConsulta
 from screens import veterinario_screens
 
 
-def main_consultas(consulta_service, farmacia_service) -> None:
+def main_consultas(consulta_service, farmacia_service, feriado_service=None) -> None:
     """Menú Principal del Módulo de Consultas y Atenciones."""
     while True:
         ui.limpiar_y_encabezado("GESTIÓN DE CONSULTAS Y ATENCIONES MÉDICAS")
@@ -18,7 +18,11 @@ def main_consultas(consulta_service, farmacia_service) -> None:
         opcion = ui.leer_opcion_menu(4)
         match opcion:
             case 1:
-                submenu_recepcion_agenda(consulta_service, farmacia_service)
+                submenu_recepcion_agenda(
+                    consulta_service,
+                    farmacia_service,
+                    feriado_service,
+                )
             case 2:
                 submenu_atencion(consulta_service, farmacia_service)
             case 3:
@@ -34,7 +38,11 @@ def main_consultas(consulta_service, farmacia_service) -> None:
 # MÓDULO 1: RECEPCIÓN Y AGENDA
 # =============================================================================
 
-def submenu_recepcion_agenda(consulta_service, farmacia_service=None) -> None:
+def submenu_recepcion_agenda(
+    consulta_service,
+    farmacia_service=None,
+    feriado_service=None,
+) -> None:
     while True:
         ui.limpiar_y_encabezado("RECEPCIÓN Y AGENDA DE CITAS")
         print('''
@@ -48,7 +56,7 @@ def submenu_recepcion_agenda(consulta_service, farmacia_service=None) -> None:
         opcion = ui.leer_opcion_menu(5)
         match opcion:
             case 1:
-                agendar_consulta(consulta_service)
+                agendar_consulta(consulta_service, feriado_service)
             case 2:
                 reagendar_consulta(consulta_service)
             case 3:
@@ -382,9 +390,36 @@ def submenu_recetas_farmacia(consulta_service) -> None:
 # IMPLEMENTACIÓN DE ACCIONES
 # =============================================================================
 
-def agendar_consulta(consulta_service) -> None:
+def _mostrar_proximos_feriados(feriado_service, limite: int = 3) -> None:
+    if feriado_service is None:
+        return
+    try:
+        proximos_feriados = feriado_service.obtener_proximos_feriados(limite)
+    except exceptions.ServicioExternoException as error:
+        ui.mostrar_advertencia(
+            f"No se pudieron cargar los próximos feriados: {error}"
+        )
+        return
+
+    if not proximos_feriados:
+        print("\nNo hay próximos feriados registrados.")
+        return
+
+    ui.mostrar_advertencia(
+        "Tenga en consideración los próximos feriados:"
+    )
+    for feriado in proximos_feriados:
+        irrenunciable = " (irrenunciable)" if feriado.es_irrenunciable else ""
+        print(
+            f"  - {feriado.fecha:%d/%m/%Y}: "
+            f"{feriado.nombre}{irrenunciable}"
+        )
+
+
+def agendar_consulta(consulta_service, feriado_service=None) -> None:
     ui.limpiar_y_encabezado("AGENDAR NUEVA CITA (DÍAS HÁBILES: LUNES A SÁBADO)")
     print("Nota: No se permite agendar citas normales en domingos ni festivos (solo urgencias).")
+    _mostrar_proximos_feriados(feriado_service)
     id_mascota = ui.leer_entero("Ingrese ID de la mascota: ", nombre_campo="ID Mascota")
     fecha_agendada = ui.leer_fecha("Ingrese fecha y hora (YYYY-MM-DD HH:MM): ", nombre_campo="Fecha Agendada")
     motivo = ui.leer_texto("Ingrese motivo de la consulta: ", max_longitud=200, nombre_campo="Motivo")

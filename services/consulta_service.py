@@ -238,12 +238,15 @@ class ConsultaService:
 
     def reagendar_consulta(self, id_consulta: int | str, nueva_fecha: datetime) -> Consulta:
         consulta = self.obtener_consulta_por_id(id_consulta)
-        nueva_fecha_valida = ValidadorEntradas.validar_fecha(nueva_fecha)
-        if not consulta.es_urgencia:
-            self._validar_fecha_consulta_normal(
-                nueva_fecha_valida,
-                " para reagendar"
+        if consulta.es_urgencia:
+            raise exceptions.ReglaNegocioError(
+                "Las urgencias no pueden reagendarse."
             )
+        nueva_fecha_valida = ValidadorEntradas.validar_fecha(nueva_fecha)
+        self._validar_fecha_consulta_normal(
+            nueva_fecha_valida,
+            " para reagendar"
+        )
         consulta.reagendar_consulta(nueva_fecha_valida)
         self.consulta_dao.actualizar_consulta(consulta)
         return consulta

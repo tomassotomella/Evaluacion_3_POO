@@ -120,6 +120,28 @@ class FeriadoService:
                 return feriado
         return None
 
+    def obtener_proximos_feriados(
+        self,
+        limite: int = 3,
+        fecha_referencia: date | datetime | None = None,
+    ) -> list[Feriado]:
+        limite_valido = ValidadorEntradas.validar_entero(
+            limite,
+            nombre="Límite de feriados",
+            minimo=1,
+        )
+        fecha_inicio = ValidadorEntradas.validar_fecha_calendario(
+            fecha_referencia if fecha_referencia is not None else date.today(),
+            "Fecha de referencia",
+        )
+        self.sincronizar_feriados()
+        feriados_futuros = [
+            feriado
+            for feriado in self.feriado_dao.listar_todos()
+            if feriado.fecha >= fecha_inicio
+        ]
+        return feriados_futuros[:limite_valido]
+
     def es_feriado(self, fecha: date | datetime) -> Feriado | None:
         fecha_calendario = ValidadorEntradas.validar_fecha_calendario(fecha)
         return self._obtener_feriado(fecha_calendario)

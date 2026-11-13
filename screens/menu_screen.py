@@ -105,7 +105,9 @@ def menu_principal(
                 mascotas_screen.main_mascotas(mascota_service)
             case 4:
                 consulta_screens.main_consultas(
-                    consulta_service, farmacia_service
+                    consulta_service,
+                    farmacia_service,
+                    feriado_service,
                 )
             case 5:
                 farmacia_screen.main_farmacia(farmacia_service)

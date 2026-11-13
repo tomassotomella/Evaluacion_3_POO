@@ -84,11 +84,12 @@ persistencia para mantener responsabilidades claras y facilitar las pruebas.
 
 Los domingos y feriados la agenda normal permanece disponible para programar
 controles futuros, pero la atención presencial se concentra en el modo de
-guardia. `FeriadoService` encapsula la caché y la consulta del calendario;
-`ConsultaService` aplica las reglas especiales de urgencia y mantiene el ciclo
-de vida y la persistencia de todas las consultas. La pantalla de guardia
-reorganiza ese flujo para registrar urgencias y reanudar pacientes que esperan
-exámenes.
+guardia. El acceso al modo de guardia se valida antes de mostrar su menú y se
+bloquea en días hábiles. `FeriadoService` encapsula la caché y la consulta del
+calendario; `ConsultaService` aplica las reglas especiales de urgencia y
+mantiene el ciclo de vida y la persistencia de todas las consultas. Los
+pacientes que esperan exámenes pueden reanudar su atención cualquier día desde
+el módulo de Atención Clínica.
 
 ---
 
@@ -770,7 +771,8 @@ Consulta la API oficial de feriados, transforma sus respuestas en objetos
 reglas de calendario: identifica domingos y feriados, determina días hábiles,
 autoriza urgencias únicamente en domingos o feriados y permite la contingencia
 de urgencias dominicales cuando la API falla. Las consultas normales se
-bloquean si no es posible verificar el calendario.
+bloquean si no es posible verificar el calendario. También expone los próximos
+feriados desde la fecha actual para informar al usuario durante el agendamiento.
 
 #### `ServicioClima`
 

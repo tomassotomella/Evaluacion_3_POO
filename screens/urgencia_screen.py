@@ -4,6 +4,13 @@ from screens import consulta_screens
 
 
 def main_guardia(consulta_service, farmacia_service) -> None:
+    try:
+        consulta_service.validar_registro_urgencia()
+    except exceptions.ReglaNegocioError as error:
+        ui.mostrar_error(str(error))
+        ui.pausar()
+        return
+
     while True:
         ui.limpiar_y_encabezado("MODO GUARDIA: URGENCIAS Y PACIENTES EN ESPERA")
         print("""
@@ -26,13 +33,13 @@ def main_guardia(consulta_service, farmacia_service) -> None:
 
 def registrar_urgencia(consulta_service, farmacia_service) -> None:
     ui.limpiar_y_encabezado("REGISTRO DE ATENCIÓN DE URGENCIA")
-    id_mascota = ui.leer_entero("Ingrese ID de la mascota: ", nombre_campo="ID Mascota")
     try:
         consulta_service.validar_registro_urgencia()
     except exceptions.ReglaNegocioError as error:
         ui.mostrar_error(str(error))
         ui.pausar()
         return
+    id_mascota = ui.leer_entero("Ingrese ID de la mascota: ", nombre_campo="ID Mascota")
     if not consulta_screens.mostrar_veterinarios_disponibles(consulta_service):
         return
     rut_veterinario = ui.leer_rut("Ingrese RUT del veterinario que atenderá: ")

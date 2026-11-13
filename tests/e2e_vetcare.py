@@ -153,6 +153,14 @@ class DomingoSimulado(datetime):
         return cls(2026, 11, 15, 12, 0, 0)
 
 
+class MartesSimulado(datetime):
+    """datetime.now() fijo en martes 2026-11-17 12:00."""
+
+    @classmethod
+    def now(cls, tz=None):  # type: ignore[override]
+        return cls(2026, 11, 17, 12, 0, 0)
+
+
 class SimulacionTeclado:
     """Sustituye input() y limpiar_pantalla(); captura la salida visible."""
 
@@ -402,9 +410,9 @@ def e10_espera_y_reanudacion(ent: Entorno) -> str:
 
     monto_antes = ent.sql("SELECT monto_total, porcentaje_recargo_feriado FROM CONSULTA WHERE id_consulta = ?", (id_consulta,))[0]
 
-    with SimulacionTeclado(["2", "", "3", str(id_consulta), "", "3", "Otitis externa",
+    with SimulacionTeclado(["2", str(id_consulta), "", "3", "Otitis externa",
                             "4", "Antibiotico topico", "5", "Control en 7 dias", "10", "1", "0"]) as sim:
-        urgencia_screen.main_guardia(ent.consulta_service, ent.farmacia_service)
+        consulta_screens.submenu_atencion(ent.consulta_service, ent.farmacia_service)
     salida = sim.texto()
     assert "Atenci" in salida and "reanudada" in salida, "La pantalla de reanudacion no se ejecuto"
 
@@ -417,7 +425,22 @@ def e10_espera_y_reanudacion(ent: Entorno) -> str:
         f"El monto se recalculo en la reanudacion: antes {monto_antes}, despues {fila[1:3]}"
     assert fila[3] is not None, "No se registro fecha de fin"
     assert fila[4] == 25000, "La tarifa base historica cambio"
-    return "Pausa en espera, reanudacion por Modo Guardia y finalizacion sin recalcular precio"
+    return "Pausa en espera, reanudacion desde Atencion Clinica y finalizacion sin recalcular precio"
+
+
+def e26_guardia_fail_fast_dia_habil(ent: Entorno) -> str:
+    original_datetime = sys.modules["services.consulta_service"].datetime
+    sys.modules["services.consulta_service"].datetime = MartesSimulado
+    try:
+        with SimulacionTeclado([""]) as sim:
+            urgencia_screen.main_guardia(ent.consulta_service, ent.farmacia_service)
+    finally:
+        sys.modules["services.consulta_service"].datetime = original_datetime
+
+    salida = sim.texto()
+    assert "MODO GUARDIA" not in salida, "Se mostro el menu de guardia en dia habil"
+    assert "urgencia" in salida.lower(), "No se informo el bloqueo de urgencias"
+    return "Modo Guardia bloqueado antes de mostrar el menu en dia habil"
 
 
 def e11_domingo_y_feriado_recargo_unico(ent: Entorno) -> str:
@@ -1091,6 +1114,7 @@ ESCENARIOS = [
     ("E23", "Iniciar atencion y paneles", e23_iniciar_atencion_y_paneles),
     ("E24", "Lecturas personas y mascotas", e24_lecturas_personas_mascotas),
     ("E25", "Lecturas clinicas y despachos por lote", e25_lecturas_clinicas_y_despachos_lote),
+    ("E26", "Guardia: fail fast en dia habil", e26_guardia_fail_fast_dia_habil),
 ]
 
 
